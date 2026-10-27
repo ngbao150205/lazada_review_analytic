@@ -19,6 +19,7 @@ import {
   getProductReviews,
   type ProductReview,
 } from "../services/api";
+import IssueEvidenceDetails from "../components/IssueEvidenceDetails";
 
 type SentimentFilter = "ALL" | "Positive" | "Neutral" | "Negative";
 
@@ -71,6 +72,7 @@ function getIssueLabel(issueType: string): string {
     SHIPPING_LOGISTICS: "Giao hàng và vận chuyển",
     CUSTOMER_SERVICE_RETURNS: "Dịch vụ khách hàng và đổi trả",
     PRICING_PROMOTIONS: "Giá cả và khuyến mãi",
+    OTHER: "Vấn đề khác",
   };
 
   return labels[issueType] || issueType;
@@ -1074,8 +1076,7 @@ function Reviews() {
                           font-semibold
                           text-red-700
                         ">
-                          Risk:{" "}
-                          {review.risk.risk_level}
+                          Cảnh báo rủi ro
                         </span>
                       )}
                     </div>
@@ -1134,6 +1135,10 @@ function Reviews() {
                       </div>
                     )}
 
+                    {review.issues?.map((issue, index) => <IssueEvidenceDetails key={`evidence-${issue.issue_type}-${index}`} evidence={issue.evidence} label={getIssueLabel(issue.issue_type)} />)}
+
+                    {review.issue_assessment?.needs_review && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{review.issue_assessment.reason}</p>}
+
                     {review.risk?.risk_flag && (
                       <div className="
                         mt-4
@@ -1156,14 +1161,8 @@ function Reviews() {
                           text-xs
                           text-red-600
                         ">
-                          Mức độ:{" "}
-                          <strong>
-                            {review.risk.risk_level}
-                          </strong>
-
                           {review.risk.risk_keyword && (
                             <>
-                              {" · "}
                               Từ khóa:{" "}
                               <strong>
                                 {review.risk.risk_keyword}

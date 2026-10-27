@@ -78,23 +78,35 @@ Xem [hướng dẫn URL / CSV / Excel](HYBRID_COLLECTION.md) và
 | Phân tích sản phẩm | Nhập URL Lazada, crawl review, phân tích và lưu database |
 | Tải CSV / Excel | Chỉ cần tên sản phẩm và file, gộp/chống trùng và phân tích theo tài khoản |
 | Sentiment | `Positive`, `Neutral`, `Negative` từ model và decision layer |
-| Dashboard | Phân bố 1–5 sao, điểm sao trung bình, mức cảnh báo rủi ro, cảm xúc, nhóm vấn đề và xu hướng qua các lần phân tích |
+| Dashboard | Phân bố 1–5 sao, điểm sao trung bình, cảnh báo gian lận/hàng giả, cảm xúc, nhóm vấn đề và xu hướng qua các lần phân tích |
 | Review | Xem nội dung, rating, sentiment, issue/risk; API có phân trang và lọc rating |
 | Lịch sử | Xem sản phẩm đã lưu và snapshot thống kê của từng lần phân tích |
-| Issue | Rule nhận diện chất lượng, giao hàng, dịch vụ/đổi trả và giá/khuyến mãi |
-| Risk | Rule trả `HIGH`, `MEDIUM`, `LOW` cùng `risk_flag` |
-| Category | Suy luận nhóm sản phẩm bằng từ khóa trong tên/URL |
+| Issue | Chỉ xét Neutral/Negative; Negative chưa rõ nhóm vào OTHER; lưu đoạn bằng chứng, rule, category và giải thích |
+| Risk | Cờ có/không và từ khóa gian lận/hàng giả; không phân mức độ |
+| Nhận xét sản phẩm | Tổng quan, 3 điểm mạnh, 3 điểm cần cải thiện và 3 việc ưu tiên; kèm số review và bằng chứng |
+| Phân tích cạnh tranh | Tìm sản phẩm đã phân tích hoặc nhập URL để phân tích rồi so sánh ngay; hiển thị tên sản phẩm, tỷ lệ khen/chê, đề xuất và bằng chứng/lịch sử |
+| Category | 30 ngành hàng, nhãn tiếng Việt, nhận diện loại sản phẩm từ tên và slug URL; ánh xạ sang nhóm issue |
 
-Category hiện có `FMCG`, `PHONE`, `EARPHONE`, `CLOTHING`, `JEWELRY` và mặc định
-`GENERAL`; xem [category_service.py](backend/app/services/category_service.py).
+Category bao gồm thực phẩm, mỹ phẩm, chăm sóc cá nhân, sức khỏe, mẹ và bé,
+điện thoại/phụ kiện, máy tính/phụ kiện, tai nghe, gia dụng, dụng cụ, thời trang,
+nhà cửa, thể thao, thú cưng và các ngành hàng khác; chưa xác định dùng `GENERAL`.
+Danh mục và luồng nhận diện ở [backend/CATEGORIES.md](backend/CATEGORIES.md);
+từ khóa cấu hình tại [product_category_rules.json](backend/app/rules/product_category_rules.json).
+Nút **Phân tích AI lại** nhận diện lại category trước khi chạy issue trên đánh giá đã lưu.
+Phần nhận xét được tạo bằng rule/mẫu câu sau mỗi lượt phân tích, lưu theo
+snapshot; không cần gọi thêm AI hoặc cung cấp API key. Xem
+[hướng dẫn nhận xét và đề xuất](backend/PRODUCT_INSIGHTS.md).
 Mã issue trả về gồm `PRODUCT_QUALITY`, `SHIPPING_LOGISTICS`,
-`CUSTOMER_SERVICE_RETURNS`, `PRICING_PROMOTIONS`. Với risk, `LOW` và
-`risk_flag=false` là kết quả không phát hiện cảnh báo, không phải một review
-bị đánh dấu rủi ro chỉ vì có bản ghi trong bảng `risk_detection`.
+`CUSTOMER_SERVICE_RETURNS`, `PRICING_PROMOTIONS`, `OTHER` (Vấn đề khác). Risk chỉ gắn cờ
+cho dấu hiệu như lừa đảo, hàng giả, hàng nhái, fake, giả mạo, không chính hãng,
+tráo hàng; xét từng đoạn thực tế và loại phủ định. Sentiment/số sao không tự tạo
+hoặc loại cảnh báo. Giao chậm, hộp móp, đổi trả và lỗi thông thường thuộc issue.
+Xem [quy tắc risk](backend/RISK_RULES.md) và [cấu hình từ khóa](backend/app/rules/risk_rules.json).
 
 Dashboard tính điểm sao trung bình và tỷ lệ từng sao trên các review đã lưu có
 rating hợp lệ từ 1 đến 5; review thiếu sao được đếm riêng. Biểu đồ rủi ro chỉ
-đếm review có `risk_flag=true`, phân theo mức độ. Biểu đồ xu hướng so sánh
+so sánh review có cảnh báo và chưa phát hiện dấu hiệu; `risk_summary` có dạng
+`{"FLAGGED": n}`, mỗi review tính một lần. Biểu đồ xu hướng so sánh
 tỷ lệ cảm xúc của tập review tại từng lần phân tích, không phải review mới mỗi ngày.
 
 Các lần phân tích mới lưu thêm `rating_summary` vào lịch sử; backend tự bổ sung
@@ -105,7 +117,7 @@ thông báo thiếu thống kê, không lấy số liệu hiện tại giả là
 Các giới hạn cần hiểu khi sử dụng:
 
 - Crawler đang hoạt động chỉ nhận URL đầy đủ của **Lazada Việt Nam**. Dữ liệu Tiki đã lưu vẫn xem được; không đổi nhãn sàn cho dữ liệu cũ.
-- Trang `Competitor` hiện là placeholder; chưa có quy trình so sánh đối thủ hoàn chỉnh.
+- So sánh cạnh tranh dựa trên review đã lưu trong tài khoản, không bảo đảm đại diện toàn bộ thị trường. Xem [cách dùng và API so sánh](backend/PRODUCT_COMPARISON.md).
 - Có đăng ký, đăng nhập, đăng xuất và quên mật khẩu; dữ liệu được tách theo tài khoản.
   Mailpit chỉ nhận email thử nghiệm trên máy local.
 - Phân tích là request đồng bộ, xử lý review lần lượt; chưa có hàng đợi tác vụ/background job.
@@ -163,7 +175,7 @@ DuanCNTT/
 │   ├── app/services/
 │   │   ├── product_service.py     # Điều phối crawl → AI → lưu / tổng hợp
 │   │   ├── ai_client.py           # Gọi AI rồi quyết định final ở backend
-│   │   ├── decision_layer.py      # Gate confidence 0.8 và sentiment guards
+│   │   ├── decision_layer.py      # Gate confidence cấu hình trong source và sentiment guards
 │   │   ├── crawler_client.py
 │   │   ├── issue_service.py
 │   │   ├── risk_service.py
@@ -398,33 +410,133 @@ nên không tự đổi runtime sang nightly.
 
 ### 6.3. Quyết định final ở backend
 
-| Confidence model gốc | Xử lý | Method thường gặp |
+Decision layer dùng rule **`idea_context_v3`**. Ngưỡng tin model được cấu
+hình bằng `MODEL_CONFIDENCE_THRESHOLD` trong `decision_layer.py`.
+Xem [luồng chi tiết, kết quả trước/sau và lệnh test](backend/tests/DECISION_LAYER_AUDIT.md).
+Các sửa lỗi từ review thực tế và URL quá dài nằm tại
+[REAL_REVIEW_REGRESSIONS.md](backend/tests/REAL_REVIEW_REGRESSIONS.md).
+Luồng đoạn ý, kiểm tra mâu thuẫn và lưu trace hiện tại được mô tả tại
+[IDEA_RULES_V3.md](backend/tests/IDEA_RULES_V3.md).
+
+| Điều kiện (xét theo thứ tự) | Xử lý |
+| --- | --- |
+| Negative + 4–5 sao hoặc Positive + 1–2 sao | Luôn kiểm tra từng đoạn ý, kể cả confidence bằng 1; không tự đảo nhãn theo sao |
+| Không thuộc nhóm trên và confidence `>= MODEL_CONFIDENCE_THRESHOLD` | Giữ nguyên nhãn/confidence model |
+| Các trường hợp còn lại | Xét từng đoạn ý, ngữ cảnh, khía cạnh và policy số sao để chọn final |
+
+So sánh trước khi làm tròn: ví dụ ngưỡng 0.8 thì đúng 0.8 dùng model,
+0.799999 vẫn chạy rule. Hai nhóm mâu thuẫn sao luôn được kiểm tra, kể cả
+khi gate là 0.1; gate thấp không còn vô hiệu hóa toàn bộ sentiment rule.
+Ngưỡng của container đang chạy được trả trong
+response phân tích lại, không tự thay đổi khi chỉ sửa file trên host.
+Confidence model không phải cam kết accuracy. Rating không phải đầu vào model.
+
+Luồng rule mới:
+
+1. Tách đoạn ý trước khi gom khoảng trắng: giữ xuống dòng, bảo vệ số thập
+   phân/URL/chữ viết tắt, ghép ngắt dòng giữa một cụm hoặc phủ định đã nhận
+   diện. Sau đó chuẩn hóa NFC, chữ thường và biến thể chữ trong từng đoạn.
+2. Giữ quan hệ dấu câu/liên từ, khía cạnh và marker ngữ cảnh. Phân biệt
+   trải nghiệm thực tế, câu giả định/chưa dùng, lời dẫn và sự cố cũ có cập nhật.
+3. Chọn cụm dài nhất không chồng lấn, xử lý phủ định cục bộ; kết luận từng
+   đoạn trước khi tổng hợp. Mỗi đoạn góp tối đa một phiếu mỗi cực, không
+   tăng điểm từ bản sao cùng bằng chứng. Unknown không được tính là Neutral.
+4. Nếu nhận diện được **cả khen và chê thực tế**, áp dụng
+   `mixed_sentiment_rating_policy`: **3–4 sao → Neutral; 5 sao → Positive**.
+   Nhánh này ưu tiên trước kết luận tổng thể, lỗi nghiêm trọng trong sentiment
+   và `keep_model` của policy xung đột cũ. Issue/risk tiếp tục được xét riêng.
+5. Các trường hợp còn lại xét kết luận tổng thể hoặc bằng chứng nội dung.
+   **Chỉ chê và 1–2 sao → Negative**; chỉ chê ở sao cao vẫn có thể Negative.
+   Mixed ở 1–2 sao hoặc thiếu/sai số sao dùng luồng nội dung cũ. Thiếu bằng
+   chứng thì giữ model/đánh dấu xem lại; không ép nhãn chỉ từ số sao.
+
+Ví dụ `Âm thanh tốt nhưng pin hơi yếu`: 3 hoặc 4 sao là Neutral; 5 sao là
+Positive. `Không tốt, không hài lòng` không phải mixed vì các từ khen đã bị
+phủ định. Tiêu đề mẫu, lời shop quảng cáo, giả định, sự cố cũ đã được xử lý
+không được tính như nhận định thực tế hiện tại. Một số mẫu mỉa mai rõ, kèm
+lời chê và kết luận tiêu cực, được loại khỏi bằng chứng khen; đây vẫn là bộ
+rule, không bảo đảm hiểu mọi cách diễn đạt.
+
+V2.1 tách tiêu đề mẫu `Dễ sử dụng:`, `Độ bền:` khỏi phần trả lời. Mệnh đề xã
+giao/thông tin không được tự động phủ quyết nhiều nhận định khen rõ; mệnh đề
+nghi có phàn nàn vẫn chặn override Positive. Mô tả loại sản phẩm thuần túy có
+thể về Neutral khi model chưa chắc chắn (`descriptive_confidence_threshold`,
+mặc định 0.65). Giao trễ tối đa một ngày kèm lời khen theo policy mixed mới:
+3–4 sao Neutral, 5 sao Positive. Issue chỉ xét Neutral/Negative theo policy hiện tại.
+Risk xét riêng dấu hiệu gian lận/hàng giả, không đánh dấu độ trễ giao hàng.
+
+URL Lazada được xác thực và chuẩn hóa trước khi crawl/lưu: bỏ tracking,
+fragment, slug dài; SKU được giữ khi gọi crawler, database dùng URL theo
+product ID. Link hơn 1.000 ký tự không còn được ghi nguyên vào `products.url`.
+
+Các nhóm từ, marker, mốc sao, `rule_version`, `rule_confidence` nằm trong
+`backend/app/rules/sentiment_decision_rules.json`. Các mốc sao phải thỏa
+`negative_rating_threshold < neutral_rating < positive_rating_threshold`, đều
+là số nguyên 1–5. `neutral_rating` dùng phân nhóm sao; không còn guard ép mọi
+review mức sao trung lập thành Neutral.
+
+Tên policy cũ được giữ để tương thích cấu hình:
+
+| Policy | Giá trị hỗ trợ | Hành vi v2 |
 | --- | --- | --- |
-| `>= 0.8` | Giữ nguyên sentiment/confidence model; không chạy sentiment guards | `model_high_confidence` |
-| `< 0.8`, có guard khớp | Áp dụng rule text/rating, có thể đổi sentiment/confidence | Tên guard đã áp dụng |
-| `< 0.8`, không guard khớp | Giữ kết quả model | `model_low_confidence_no_override` |
+| `positive_model_low_rating` | `review_text_then_rating`, `keep_model` | Xét nội dung; không đổi chỉ vì sao thấp |
+| `negative_model_high_rating` | `review_text_then_rating`, `keep_model` | Xét nội dung; không đổi chỉ vì sao cao/thiếu keyword |
+| `neutral_model_extreme_rating` | `rating_if_text_clear`, `keep_model` | Nội dung rõ có thể đổi Neutral, kể cả khi sao mâu thuẫn |
 
-So sánh trước khi làm tròn: **đúng 0.8 dùng model**, còn `0.799999` vẫn chạy rule.
-Confidence là xác suất lớn nhất sau khi trung bình 5 fold, không phải cam kết
-accuracy 80%. Rating không đi vào model; chỉ có thể tác động ở nhánh rule backend.
+`keep_model` chặn override khi có xung đột model/rating tương ứng, ngoại trừ
+nhánh mixed theo sao ở trên và sửa phủ định thuần tích cực. Policy không hỗ
+trợ sẽ báo lỗi. Mapping mixed nằm trong JSON, chỉ nhận khóa sao `"1"`–`"5"`
+và nhãn Positive/Neutral/Negative; hiện cấu hình các khóa 3, 4, 5.
 
-Các guard hiện có: phủ định tích cực (`không đau tai`...), xung đột rating cao
-với nhãn Negative, rating thấp với Positive và xử lý rating 3.
+Backend giữ `model_result`, `raw_sentiment`, `raw_confidence` và trả `final`
+mới. Có thêm `rules_version`, `label_overridden`, `mixed_sentiment`,
+`needs_review`, `confidence_source` và trace evidence theo mệnh đề. Offset
+của mỗi match trỏ vào `normalized_text` của mệnh đề, không phải review gốc.
+Nếu giữ nhãn thì giữ xác suất model; nếu đổi nhãn thì dùng confidence heuristic
+cấu hình riêng (Positive 0.75, Negative 0.70, Neutral 0.60), không kế thừa xác
+suất nhãn cũ và không coi đây là xác suất đã hiệu chỉnh.
+
+Sentiment `idea_context_v3_3` nhận diện thêm lời khen như “size đúng theo bảng
+đo”, “chất liệu chắc chắn”, “không cần đổi trả”, “không có sai sót” và “không
+phải đợi quá lâu”. Phân biệt với “không được đổi trả”, “có sai sót” và các
+phàn nàn khác trong cùng review. Xem [rule phủ định tích cực và test hồi quy](backend/tests/POSITIVE_NEGATION_RULES.md).
+
+Sentiment v3.3 và issue v8 bổ sung tiếng lóng “đỉnh điên”, kiểm tra phần trả
+lời có chuỗi chữ nhiễu, thiếu quà tặng có lời hứa, dịch vụ không giải quyết,
+lỗi kết nối và thông tin gây nhầm lẫn. Xem [rule và test review camera](backend/tests/CAMERA_REVIEW_RULES.md).
+
+Database lưu nhãn/confidence final, model version, method và JSON
+`review_analysis.decision_details` chứa raw/final, lý do và evidence từng
+đoạn. Migration chỉ thêm cột nullable, dữ liệu cũ chưa có trace vẫn là null.
+API review trả trace tại `sentiment.decision_details`; dashboard chưa hiển
+thị chi tiết từng đoạn. Issue chạy bằng final sentiment; risk xét riêng từ khóa
+gian lận/hàng giả trên mọi nhãn và số sao. Gate sentiment không bỏ qua hai bước này.
+
+Issue dùng chung bộ phân đoạn và ngữ cảnh v3 của sentiment. Lời dẫn, giả định,
+bất định hoặc khen ngợi không còn lọc cả review; mỗi lần xuất hiện keyword
+được kiểm tra theo đoạn chứa nó và phủ định ngay tại vị trí đó. Issue v7 chỉ
+áp dụng cho nhãn cuối Neutral/Negative; Positive không có issue. Trọng số
+được cấu hình theo rule, không tính theo số từ hoặc cộng bonus số sao.
+Các từ chê chung “tệ”, “dở”, “dởm/dỏm/rởm” thuộc chất lượng sản phẩm. Rule
+hỗ trợ vải quá mỏng, lỗi đường may, size không chính xác và màu không giống
+ảnh; “khá lâu” chỉ được gán vận chuyển khi đúng ngữ cảnh giao hàng. Hộp ngoài
+móp được gán vận chuyển; mỹ phẩm vỡ, thiếu quà tặng đã hứa và từ chối đổi trả
+có rule riêng. Bằng chứng có thể kèm đoạn ngữ cảnh liên quan như lời hứa tặng cọ.
+Negative chưa có bằng
+chứng đủ rõ để gán nhóm cụ thể được đưa vào OTHER và ghi rõ cần kiểm tra thêm. Lưu proof ở
+`issue_analysis.evidence` và kết quả cần kiểm tra ở `reviews.issue_assessment`;
+Reviews/Issues có mục xem bằng chứng và lý do fallback. Xem [Issue v7 và ví dụ kiểm thử](backend/tests/ISSUE_RULES_V7.md).
+
+Rule nạp khi backend khởi động. Sau khi sửa source/JSON, áp dụng bằng
+`docker compose up -d --no-deps --build backend`. Review đã phân tích và các
+snapshot lịch sử không tự thay đổi; script rebuild chỉ chạy khi chủ động gọi.
 
 Nguồn điều chỉnh:
 
-- [Decision layer](backend/app/services/decision_layer.py): `MODEL_CONFIDENCE_THRESHOLD = 0.8` và logic guard.
-- [Sentiment rules](backend/app/rules/sentiment_decision_rules.json): từ/cụm từ và ngưỡng rating.
-- [Issue rules](backend/app/rules/issue_rules.json) và [issue service](backend/app/services/issue_service.py).
-- [Risk rules](backend/app/rules/risk_rules.json) và [risk service](backend/app/services/risk_service.py).
-
-Issue/risk có luồng rule riêng sau khi có final; bypass sentiment rule không có
-nghĩa bỏ qua phát hiện issue/risk.
-
-Backend giữ `model_result`, `raw_sentiment`, `raw_confidence`, `rules_applied`
-để đối chiếu, và trả `final` sau xử lý. Confidence do guard gán không phải
-confidence gốc của model. Database hiện lưu nhãn/confidence **final**, model version
-và method; chưa có cột riêng lưu toàn bộ raw probability/evidence.
+- [Decision layer](backend/app/services/decision_layer.py): ngưỡng confidence và quyết định final.
+- [Evidence parser](backend/app/services/sentiment_evidence.py): chuẩn hóa, mệnh đề, ngữ cảnh, phạm vi phủ định.
+- [Sentiment rules](backend/app/rules/sentiment_decision_rules.json): cấu hình từ và ngữ cảnh.
+- [Issue service](backend/app/services/issue_service.py) và [risk service](backend/app/services/risk_service.py): xử lý sau final.
 
 ### 6.4. Review không thể phân tích
 
@@ -443,9 +555,9 @@ bị bỏ qua theo cơ chế này; cần đọc detail/log để xử lý.
 | `products` | Chủ sở hữu, nguồn Lazada/file, URL, tên, category và thời điểm cập nhật |
 | `reviews` | Nội dung gốc, rating, ngày review và trạng thái phân tích |
 | `review_analysis` | Sentiment/confidence final, `model_version`, `analysis_method` |
-| `issue_analysis` | Nhóm issue và keyword khớp |
-| `risk_detection` | `risk_flag`, mức rủi ro và keyword |
-| `analysis_history` | Snapshot số lượng/tỷ lệ sentiment và summary issue/risk theo lần phân tích |
+| `issue_analysis` | Nhóm issue, keyword tóm tắt và JSON bằng chứng (đoạn, rule, category, lý do, trọng số) |
+| `risk_detection` | `risk_flag`, keyword và phiên bản rule; cột mức độ cũ được giữ nullable để tương thích |
+| `analysis_history` | Snapshot sentiment, issue/risk, số sao và nhận xét/bằng chứng theo lần phân tích |
 | `review_collections` | Audit lần nhập CSV/Excel (và client API cũ), thống kê chống trùng và liên kết snapshot |
 | `users`, `auth_sessions` | Tài khoản và phiên đăng nhập có thể thu hồi |
 | `password_reset_tokens`, `user_api_tokens` | Token băm để reset mật khẩu và gọi API cá nhân |
@@ -490,6 +602,8 @@ Thiếu xác thực trả 401; sản phẩm của tài khoản khác trả 404. 
 | GET | `/products` hoặc `/products/` | Danh sách sản phẩm đã lưu |
 | GET | `/products/collection-config` | Nhánh thu thập URL: crawler cookie Lazada |
 | POST | `/products/analyze` | Body `{"url":"URL_LAZADA"}`; lấy review qua crawler cookie, phân tích, ghi database |
+| GET | `/products/{product_id}/insights/evidence` | Review hỗ trợ nhận xét, có phân trang và xác thực theo chủ sở hữu |
+| POST | `/products/{product_id}/reanalyze` | Chạy AI/rule lại trên toàn bộ review đã lưu của sản phẩm thuộc tài khoản; không crawl; cập nhật issue/risk và tạo snapshot mới |
 | GET | `/collections/status` | Kiểm tra khóa nhập dữ liệu và giới hạn upload |
 | POST | `/collections/reviews` | Nhận JSON cho client API cũ; cần cookie / Bearer cá nhân |
 | POST | `/collections/import` | Import bytes CSV/Excel với tên sản phẩm; cần cookie / Bearer cá nhân; xem [hợp đồng API](HYBRID_COLLECTION.md#api) |
@@ -524,17 +638,21 @@ Crawler gọi API đánh giá Lazada qua
 [`cookie_crawler.py`](crawler-service/cookie_crawler.py). `GET /` trả
 `crawler_mode=cookie`, `access_mode=configured_cookie`. Thiếu `LAZADA_COOKIE`
 trả `503` trước khi gọi nguồn; URL/cookie sai định dạng trả `400`. Gặp xác minh
-mà chưa lấy được review trả `429`; lỗi nguồn khác có thể trả `502`.
+mà chưa lấy được review trả `429`; timeout mạng trả `504`; lỗi nguồn khác có thể trả `502`.
 
 Kết quả có `crawl_source=cookie_star_filter`, `crawl_status` (`FULL`/`PARTIAL`),
-`crawl_error`, `requires_verification` và các mức sao chưa hoàn tất. Backend
+`crawl_error`, `crawl_error_code`, `curl_error_code`, `request_attempts`,
+`requires_verification` và các mức sao chưa hoàn tất. Backend
 thêm `collection_provider=crawler`. Có dữ liệu một phần thì vẫn phân tích/lưu
 review hợp lệ, hiển thị cảnh báo. Khi không có review mới, kết quả các lần
 phân tích trước vẫn được giữ. `FULL` chỉ phản ánh các trang API đã đọc, không
 cam kết những review bị nguồn ẩn hoặc không truy cập được.
 
 Chỉ cần `LAZADA_COOKIE`; User-Agent mặc định do `curl_cffi` cung cấp. Crawler
-không giới hạn số review hay tổng thời gian, mỗi request có timeout 15 giây.
+không giới hạn số review hay tổng thời gian, mỗi request có timeout 30 giây
+và thử lại tối đa một lần khi có lỗi kết nối tạm thời hoặc HTTP 5xx phù hợp.
+Không retry CAPTCHA/giới hạn truy cập. Mã `network_timeout` (curl 28) phân biệt
+với `verification_required`; log không in dữ liệu cookie hoặc exception thô.
 Backend còn chạy AI/rule sau đó; mỗi lần gọi AI có timeout 60 giây riêng.
 Cookie không bảo đảm tránh CAPTCHA. Test offline không xác nhận truy cập
 Lazada thật thành công.
@@ -691,7 +809,7 @@ curl -fsS http://127.0.0.1:8001/predict \
 
 Response phải có `model_name` là `underthesea_bilstm_custom_vocab_v3`.
 `/health` liệt kê đủ 5 checkpoint; `/predict` trả sentiment và confidence.
-Đây là kết quả model; backend mới áp dụng ngưỡng 0.8 khi phân tích sản phẩm.
+Đây là kết quả model; backend mới áp dụng ngưỡng hiện tại trong `decision_layer.py` khi phân tích sản phẩm.
 
 ### Frontend
 
@@ -749,6 +867,44 @@ khởi động; thay file trên host rồi chỉ mở lại trang web không c�
 
 ### Phân tích lại review đã lưu
 
+**Trên giao diện, theo từng sản phẩm:**
+
+1. Sau khi sửa model/rule/ngưỡng, build và khởi động lại dịch vụ tương ứng
+   theo hướng dẫn ở trên. Sửa rule hoặc ngưỡng backend chỉ cần build backend.
+2. Vào **Lịch sử → mở Dashboard** của sản phẩm đã có review.
+3. Bấm **Phân tích AI lại**, chờ tác vụ hoàn tất. Toàn bộ review hiện có
+   được xử lý, kể cả review đã phân tích; không gọi Lazada hoặc cần cookie.
+4. Dashboard tự chuyển sang snapshot mới, báo số review xử lý, số nhãn thay
+   đổi và ngưỡng tin model đã sử dụng. Dùng **Chuyển lần phân tích** để so
+   sánh các thống kê cũ/mới.
+
+Chức năng áp dụng cho dữ liệu thu từ URL và dữ liệu nhập file. Cảm xúc,
+confidence, method, issue và risk được tính lại bằng pipeline hiện tại.
+Review không đủ văn bản cho AI được đếm riêng, không giữ nhãn sentiment cũ.
+Nếu AI hoặc database lỗi, toàn bộ thay đổi của lượt đó được rollback.
+Sản phẩm đang xử lý trả 409; sản phẩm không có review trả 400. Thời gian
+chạy phụ thuộc số review; giữ trang mở trong lúc xử lý.
+
+Snapshot thống kê cũ được giữ nguyên; nhãn/issue/risk của từng review phản
+ánh lần chạy mới nhất, không phải bản sao riêng cho từng lịch sử. Nút chạy
+trên toàn bộ review hiện có, kể cả khi đang xem một snapshot cũ.
+
+API tương đương (dùng ID nội bộ database):
+
+```bash
+curl -fsS -X POST "http://127.0.0.1:8000/products/${SENTIMENT_PRODUCT_DB_ID}/reanalyze" \
+  -H "Authorization: Bearer $PERSONAL_API_TOKEN"
+```
+
+Response có `analysis_history_id`, `reanalyzed_reviews`, `skipped_reviews`,
+`changed_sentiments`, `decision_methods`, `analysis_config` (ngưỡng, version
+sentiment/category/issue rule), `classification` (category cũ/mới, tên tiếng Việt,
+nguồn nhận diện và từ khóa khớp) và `analysis` mới. API yêu cầu đăng nhập hoặc token cá nhân;
+chỉ xử lý sản phẩm của tài khoản đó. Lỗi AI/response model trả 502, lỗi lưu
+khác trả 500; cả hai đều không lưu một phần kết quả.
+
+**Các script quản trị cũ (có thể ảnh hưởng nhiều sản phẩm/tài khoản):**
+
 Các script sau **ghi lại dữ liệu phân tích**. Backup database trước khi chạy;
 không chạy song song với một đợt phân tích sản phẩm khác.
 
@@ -766,8 +922,7 @@ docker compose exec -T backend python scripts/rebuild_risk_detection.py --produc
 
 Đọc log `rebuilt/skipped/failed`. Script sentiment có thể báo `FAILED` cho review
 chỉ emoji vì chưa có cơ chế đếm riêng như API phân tích sản phẩm; nó không gán
-sentiment giả. Script issue hiện không truyền category của từng product, cần
-đánh giá ảnh hưởng nếu muốn rebuild issue theo nhóm sản phẩm.
+sentiment giả. Script issue dùng rating và category của từng product.
 
 Các script không tự cập nhật snapshot cũ trong `analysis_history`. Không xem
 việc đổi weights/rule là thao tác tự động sửa mọi kết quả đã lưu.
@@ -882,9 +1037,31 @@ docker compose logs --tail 100 backend ai-service crawler-service postgres
 | `/predict` trả 422 cho emoji | Bình thường với nội dung rỗng sau clean; API phân tích sản phẩm hiện bỏ qua sentiment của review đó |
 | Crawl không có/thiếu review | Kiểm tra URL, cookie của request đánh giá thành công, `PARTIAL` và `requires_verification`; cookie không bảo đảm tránh CAPTCHA, dữ liệu đã lưu vẫn được giữ |
 | Build timeout khi tải package | Kiểm tra mạng/DNS Docker, chạy lại build; tránh nâng dependency ngẫu nhiên |
+| `load metadata`, `auth.docker.io`, `context deadline exceeded` hoặc `x509` khi build | Docker chưa kết nối/xác thực TLS được với Docker Hub; xem hướng dẫn ngay dưới bảng |
 | Sửa code mà giao diện/AI không đổi | Build và recreate đúng service; restart hoặc refresh trình duyệt không copy source vào image |
 | `Cannot find module`/`ModuleNotFoundError` khi native | Đúng thư mục, đúng venv và entry point; không chạy backend bằng venv Python 3.14 của dự án khác |
 | TypeScript báo biến không dùng | Sửa biến/import không dùng rồi chạy `npm run build`; không bỏ kiểm tra chỉ để tạo bundle |
+
+Nếu máy **đã có đủ image của dự án**, có thể khởi chạy trong lúc Docker Hub
+không truy cập được:
+
+```bash
+docker compose up -d --no-build --pull never
+docker compose ps
+```
+
+Lệnh này dùng image đã có, không đóng gói các thay đổi source mới. Máy mới
+clone chưa có image vẫn cần kết nối registry để build/tải lần đầu.
+`--pull never` chỉ kiểm soát việc tải image khi khởi chạy; không giải quyết
+việc BuildKit đọc metadata của `FROM` khi chạy `--build`.
+
+Nếu build lỗi ở `FROM python:3.12-slim` hoặc `FROM node:20-alpine`, kiểm tra
+kết nối tới cả `registry-1.docker.io` và `auth.docker.io`, cấu hình VPN/proxy
+trong [Docker Desktop Settings](https://docs.docker.com/desktop/settings-and-maintenance/settings/#proxies),
+rồi khởi động lại Docker Desktop. Nếu mạng dùng proxy kiểm tra HTTPS, cần
+trust CA chính thức của proxy theo
+[hướng dẫn Docker trên macOS](https://docs.docker.com/engine/network/ca-certs/#macos).
+Lỗi này xảy ra trước các bước cài package/chạy ứng dụng trong Dockerfile.
 
 Để kiểm tra mạng khi hostname `postgres` không phân giải:
 

@@ -1,6 +1,4 @@
-import json
-import re
-import unicodedata
+"""Issues for final Neutral/Negative labels, with an explicit Negative fallback."""
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -8,1147 +6,227 @@ from typing import Any
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from database.models import (
-    Product,
-    Review,
-    IssueAnalysis,
-)
+from database.models import Product, Review, IssueAnalysis
+from app.services import decision_layer
+from app.services.category_service import category_label, issue_group_for_category
+from app.services.issue_evidence import build_issue_evidence, keyword_pattern, normalize_issue_text
+from app.services.issue_rule_config import load_issue_rules as load_config, validate_issue_rules
 
-# ============================================================
-# RULE FILE
-# ============================================================
-
-RULE_FILE = (
-    Path(__file__)
-    .resolve()
-    .parents[1]
-    / "rules"
-    / "issue_rules.json"
-)
+RULE_FILE = Path(__file__).resolve().parents[1] / "rules" / "issue_rules.json"
 
 
-def load_issue_rules() -> dict[str, Any]:
-    """Load issue rules from backend/app/rules/issue_rules.json."""
-
-    if not RULE_FILE.exists():
-        raise FileNotFoundError(
-            f"Issue rule file not found: {RULE_FILE}"
-        )
-
-    with RULE_FILE.open("r", encoding="utf-8") as file:
-        return json.load(file)
+def load_issue_rules():
+    return load_config(RULE_FILE)
 
 
 ISSUE_RULES = load_issue_rules()
-
-def get_rule_list(
-    key: str,
-) -> list[str]:
-    value = ISSUE_RULES.get(key, [])
-
-    if not isinstance(value, list):
-        return []
-
-    return [
-        normalize_text(str(item))
-        for item in value
-        if normalize_text(str(item))
-    ]
-
-# ============================================================
-# CONSTANTS
-# ============================================================
-
 PRODUCT_QUALITY = "PRODUCT_QUALITY"
 SHIPPING_LOGISTICS = "SHIPPING_LOGISTICS"
 CUSTOMER_SERVICE_RETURNS = "CUSTOMER_SERVICE_RETURNS"
 PRICING_PROMOTIONS = "PRICING_PROMOTIONS"
-
-VALID_ISSUE_TYPES = {
-    PRODUCT_QUALITY,
-    SHIPPING_LOGISTICS,
-    CUSTOMER_SERVICE_RETURNS,
-    PRICING_PROMOTIONS,
-}
-
-PRODUCT_GROUP_MAPPING = {
-    "FMCG": "FMCG_BEAUTY_HEALTH",
-    "COSMETIC": "FMCG_BEAUTY_HEALTH",
-    "PHONE": "ELECTRONICS_TECH",
-    "EARPHONE": "ELECTRONICS_TECH",
-    "CLOTHING": "FASHION_ACCESSORIES",
-    "JEWELRY": "FASHION_ACCESSORIES",
-    "PACKAGING": "FASHION_ACCESSORIES",
-}
-
+OTHER = "OTHER"
 ISSUE_LABELS = {
-    PRODUCT_QUALITY: "Chất lượng sản phẩm",
-    SHIPPING_LOGISTICS: "Giao hàng và vận chuyển",
-    CUSTOMER_SERVICE_RETURNS: "Dịch vụ khách hàng và đổi trả",
-    PRICING_PROMOTIONS: "Giá cả và khuyến mãi",
+    PRODUCT_QUALITY: "Chất lượng sản phẩm", SHIPPING_LOGISTICS: "Giao hàng và vận chuyển",
+    CUSTOMER_SERVICE_RETURNS: "Dịch vụ khách hàng và đổi trả", PRICING_PROMOTIONS: "Giá cả và khuyến mãi",
+    OTHER: "Vấn đề khác",
 }
-
-# ============================================================
-# SCORING CONFIG
-# ============================================================
-
-STRONG_SCORE = 4
-MEDIUM_SCORE = 2
-WEAK_SCORE = 1
-
-NEGATIVE_BONUS = 1
-LOW_RATING_BONUS = 1
-
-MIN_ISSUE_SCORE = 3
-FALLBACK_SCORE = 1
-
-# ============================================================
-# DECISION CONFIG
-# ============================================================
-
-# ============================================================
-# NORMALIZATION
-# ============================================================
+VALID_ISSUE_TYPES = set(ISSUE_LABELS)
 
 
-def normalize_text(text: str | None) -> str:
-    """Normalize Vietnamese review text before keyword matching."""
-
-    if not text:
-        return ""
-
-    text = str(text).lower()
-    text = unicodedata.normalize("NFC", text)
-
-    abbreviations = ISSUE_RULES.get("abbreviations", {})
-
-    if isinstance(abbreviations, dict):
-        for old, new in sorted(
-            abbreviations.items(),
-            key=lambda item: len(str(item[0])),
-            reverse=True,
-        ):
-            old_value = normalize_text_without_abbreviation(str(old))
-            new_value = normalize_text_without_abbreviation(str(new))
-
-            if not old_value:
-                continue
-
-            text = re.sub(
-                rf"(?<![0-9a-zà-ỹ]){re.escape(old_value)}(?![0-9a-zà-ỹ])",
-                new_value,
-                text,
-            )
-
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
+def normalize_text(text):
+    return normalize_issue_text(text, ISSUE_RULES)
 
 
-def normalize_text_without_abbreviation(text: str | None) -> str:
-    if not text:
-        return ""
-
-    text = str(text).lower()
-    text = unicodedata.normalize("NFC", text)
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
+def normalize_sentiment(sentiment):
+    return {"positive": "Positive", "tích cực": "Positive", "neutral": "Neutral",
+            "trung lập": "Neutral", "negative": "Negative", "tiêu cực": "Negative"}.get(str(sentiment or "").strip().lower())
 
 
-def normalize_sentiment(sentiment: str | None) -> str | None:
-    """Normalize sentiment label to Positive, Neutral, or Negative."""
-
-    if not sentiment:
-        return None
-
-    value = str(sentiment).strip().lower()
-
-    mapping = {
-        "positive": "Positive",
-        "tích cực": "Positive",
-        "neutral": "Neutral",
-        "trung lập": "Neutral",
-        "negative": "Negative",
-        "tiêu cực": "Negative",
-    }
-
-    return mapping.get(value)
+def normalize_product_group(category):
+    return issue_group_for_category(category)
 
 
-def normalize_product_group(category: str | None) -> str:
-    """Map raw product category into one business group."""
-
-    if not category:
-        return "GENERAL"
-
-    normalized = (
-        str(category)
-        .strip()
-        .upper()
-        .replace(" ", "_")
-        .replace("-", "_")
-    )
-
-    return PRODUCT_GROUP_MAPPING.get(normalized, "GENERAL")
+def normalize_rating(rating):
+    return decision_layer.normalize_rating(rating)
 
 
-def normalize_rating(rating: int | float | None) -> int | None:
-    if rating is None:
-        return None
-
-    try:
-        return int(rating)
-    except (TypeError, ValueError):
-        return None
-
-# ============================================================
-# KEYWORD MATCHING
-# ============================================================
+def contains_keyword(text, keyword):
+    keyword = normalize_text(keyword)
+    return bool(keyword and keyword_pattern(keyword).search(normalize_text(text)))
 
 
-def contains_keyword(text: str, keyword: str) -> bool:
-    """
-    Match keyword with Vietnamese word boundaries.
+def _scoped_rules(category):
+    validate_issue_rules(ISSUE_RULES)
+    group = normalize_product_group(category)
+    return [rule for rule in ISSUE_RULES['evidence_rules']
+            if 'GENERAL' in rule['product_groups'] or group in rule['product_groups']]
 
-    Avoid false matches:
-        "hư" inside "như"
-        "giả" inside "đánh giá"
-    """
 
-    if not text or not keyword:
+def _catalog(category):
+    group = normalize_product_group(category)
+    catalog = {}
+    for rule in _scoped_rules(category):
+        scopes = rule["product_groups"]
+        for keyword in rule["keywords"]:
+            key = (rule["issue_type"], normalize_text(keyword))
+            previous = catalog.get(key)
+            rank = (rule["weight"], group in scopes and group != "GENERAL", rule["id"])
+            previous_rank = (previous["weight"], group in previous["product_groups"] and group != "GENERAL", previous["id"]) if previous else None
+            if previous_rank is None or rank > previous_rank:
+                catalog[key] = rule
+    return catalog
+
+
+def get_keywords_for_category(category):
+    grouped = {}
+    for issue_type, keyword in _catalog(category):
+        grouped.setdefault(issue_type, []).append(keyword)
+    return grouped
+
+
+def _review_check(sentiment, rating):
+    label, stars = normalize_sentiment(sentiment), normalize_rating(rating)
+    policy = ISSUE_RULES["review_policy"]
+    triggers = []
+    if label in policy["request_on_sentiments"]:
+        triggers.append("sentiment_requests_check")
+    if stars is not None and stars <= policy["low_rating_max"]:
+        triggers.append("low_rating_requests_check")
+    if stars is not None and ((label == "Negative" and stars >= policy["high_rating_min"])
+                              or (label == "Positive" and stars <= policy["low_rating_max"])):
+        triggers.append("sentiment_rating_conflict")
+    return {"requested": bool(triggers), "triggers": triggers, "sentiment": label, "rating": stars}
+
+
+def get_issue_evidence(content, category="GENERAL", *, sentiment=None, rating=None, context_rules=None):
+    evidence = build_issue_evidence(content, _catalog(category), ISSUE_RULES, context_rules if context_rules is not None else decision_layer.SENTIMENT_RULES,
+                                    pattern_rules=_scoped_rules(category))
+    evidence["review_check"] = _review_check(sentiment, rating)
+    return evidence
+
+
+def has_explicit_issue_keyword(text, category="GENERAL"):
+    threshold = ISSUE_RULES["scoring"]["threshold"]
+    return any(item["accepted"] and item["weight"] >= threshold for item in get_issue_evidence(text, category)["occurrences"])
+
+
+def should_check_issue(text, sentiment, rating=None, category="GENERAL"):
+    if normalize_sentiment(sentiment) not in ISSUE_RULES["decision_policy"]["eligible_sentiments"]:
         return False
-
-    normalized_keyword = normalize_text(keyword)
-
-    if not normalized_keyword:
-        return False
-
-    pattern = (
-        r"(?<![0-9a-zà-ỹ])"
-        + re.escape(normalized_keyword)
-        + r"(?![0-9a-zà-ỹ])"
-    )
-
-    return re.search(pattern, text) is not None
+    return _review_check(sentiment, rating)["requested"] or has_explicit_issue_keyword(text, category)
 
 
-def split_sentences(text: str) -> list[str]:
-    """Split review into clauses."""
-
-    parts = re.split(r"[.!?;,\n\r]+", text)
-
-    return [
-        part.strip()
-        for part in parts
-        if part.strip()
-    ]
-
-
-def find_matching_sentence(text: str, keyword: str) -> str | None:
-    for sentence in split_sentences(text):
-        if contains_keyword(sentence, keyword):
-            return sentence
-
-    return None
+def _score_evidence(evidence):
+    scores = {kind: 0 for kind in ISSUE_LABELS}
+    matched = {kind: [] for kind in ISSUE_LABELS}
+    for item in evidence["occurrences"]:
+        if item["accepted"]:
+            kind, keyword = item["issue_type"], item["keyword"]
+            scores[kind] = max(scores[kind], item["weight"])
+            if keyword not in matched[kind]:
+                matched[kind].append(keyword)
+    return scores, matched
 
 
-def get_keyword_clause(sentence: str, keyword: str) -> str:
-    """Get the local clause containing the keyword."""
-
-    connectors = [
-        "nhưng mà",
-        "tuy nhiên",
-        "mặc dù",
-        "nhưng",
-        "dù",
-        "tuy",
-        "mà",
-        "còn",
-    ]
-
-    pattern = (
-        r"\b(?:"
-        + "|".join(re.escape(item) for item in connectors)
-        + r")\b"
-    )
-
-    parts = re.split(pattern, sentence)
-
-    for part in parts:
-        if contains_keyword(part, keyword):
-            return part.strip()
-
-    return sentence.strip()
-
-# ============================================================
-# CONTEXT CHECKING
-# ============================================================
+def score_issues(content, sentiment=None, category="GENERAL", rating=None):
+    """Diagnostic text weights only; assess_issues applies the final sentiment policy."""
+    return _score_evidence(get_issue_evidence(content, category, sentiment=sentiment, rating=rating))
 
 
-def is_negated(clause: str, keyword: str) -> bool:
-    """
-    Detect negated issue keyword.
-
-    Examples:
-        không móp
-        không bị móp
-        không có lỗi
-        chưa bị hỏng
-    """
-
-    if not clause or not keyword:
-        return False
-
-    negation_words = ISSUE_RULES.get(
-        "negation_words",
-        [
-            "không",
-            "ko",
-            "k",
-            "kh",
-            "chưa",
-            "chẳng",
-            "chả",
-        ],
-    )
-
-    if not isinstance(negation_words, list):
-        negation_words = [
-            "không",
-            "ko",
-            "k",
-            "kh",
-            "chưa",
-            "chẳng",
-            "chả",
-        ]
-
-    normalized_keyword = normalize_text(keyword)
-
-    pattern = (
-        r"(?<![0-9a-zà-ỹ])"
-        r"(?:"
-        + "|".join(re.escape(str(word)) for word in negation_words)
-        + r")"
-        r"\s+(?:bị\s+|có\s+|hề\s+|gặp\s+|thấy\s+)?"
-        + re.escape(normalized_keyword)
-        + r"(?![0-9a-zà-ỹ])"
-    )
-
-    return re.search(pattern, clause) is not None
+def _keyword_summary(keywords):
+    # Legacy VARCHAR(255) remains a summary; full evidence is in JSON.
+    result = []
+    for word in sorted(set(keywords), key=lambda value: (-len(value), value)):
+        if len(", ".join(result + [word])) <= 255:
+            result.append(word)
+    return ", ".join(result)
 
 
-def has_positive_context(sentence: str, keyword: str) -> bool:
-    """Check whether keyword appears in positive or negated context."""
+def _snapshot_match(item, clauses):
+    clause = clauses[item["clause_index"]]
+    return {**item, "text": clause["original_text"], "original_start": clause["original_start"],
+            "original_end": clause["original_end"], "issue_text": clause["issue_text"],
+            "context": clause["context"], "aspect": clause["aspect"], "aspect_label": clause["aspect_label"]}
 
-    clause = get_keyword_clause(sentence, keyword)
 
-    if is_negated(clause, keyword):
-        return True
-
-    normalized_keyword = normalize_text(keyword)
-    keyword_position = clause.find(normalized_keyword)
-
-    if keyword_position == -1:
-        return False
-
-    start = max(0, keyword_position - 40)
-    end = min(
-        len(clause),
-        keyword_position + len(normalized_keyword) + 40,
-    )
-
-    local_context = clause[start:end]
-
-    positive_phrases = ISSUE_RULES.get("positive_phrases", [])
-
-    if not isinstance(positive_phrases, list):
-        return False
-
-    for phrase in positive_phrases:
-        normalized_phrase = normalize_text(str(phrase))
-
-        if not normalized_phrase:
+def assess_issues(content, sentiment=None, category="GENERAL", rating=None):
+    validate_issue_rules(ISSUE_RULES)
+    policy = ISSUE_RULES["decision_policy"]
+    label = normalize_sentiment(sentiment)
+    if label not in policy["eligible_sentiments"]:
+        reason_code = "positive_sentiment_skipped" if label == "Positive" else "missing_or_invalid_sentiment"
+        reason = ("Review Positive không áp dụng phân loại vấn đề." if label == "Positive" else
+                  "Chưa có nhãn cảm xúc hợp lệ để phân loại vấn đề.")
+        check = _review_check(sentiment, rating)
+        return {"issues": [], "assessment": {
+            "rule_version": ISSUE_RULES["rule_version"], "category": category or "GENERAL",
+            "issue_group": normalize_product_group(category), "review_check": check,
+            "eligible": False, "fallback_used": False, "reason_code": reason_code, "reason": reason,
+            "needs_review": False, "issue_count": 0, "scores": {kind: 0 for kind in ISSUE_LABELS},
+            "threshold": ISSUE_RULES["scoring"]["threshold"], "has_weak_evidence": False,
+        }, "trace": {"rule_version": ISSUE_RULES["rule_version"], "clauses": [], "occurrences": [],
+                     "review_check": check, "skipped_reason": reason_code}}
+    evidence = get_issue_evidence(content, category, sentiment=sentiment, rating=rating)
+    scores, matched = _score_evidence(evidence)
+    scoring = ISSUE_RULES["scoring"]
+    detected = []
+    for kind, score in scores.items():
+        if score < scoring["threshold"]:
             continue
-
-        if normalized_phrase == normalized_keyword:
-            continue
-
-        if normalized_phrase in normalized_keyword:
-            continue
-
-        if normalized_keyword in normalized_phrase:
-            continue
-
-        if normalized_phrase in local_context:
-            return True
-
-    return False
-
-
-def has_negative_context(sentence: str, keyword: str) -> bool:
-    """Check whether keyword is used as a real complaint."""
-
-    clause = get_keyword_clause(sentence, keyword)
-
-    if is_negated(clause, keyword):
-        return False
-
-    negative_markers = ISSUE_RULES.get("negative_markers", [])
-
-    if isinstance(negative_markers, list):
-        for marker in negative_markers:
-            normalized_marker = normalize_text(str(marker))
-
-            if not normalized_marker:
-                continue
-
-            if normalized_marker == normalize_text(keyword):
-                continue
-
-            if contains_keyword(clause, normalized_marker):
-                return True
-
-    # A multi-word keyword from JSON is already a contextual issue phrase.
-    if len(normalize_text(keyword).split()) >= 2:
-        return True
-
-    return False
-
-
-def is_reported_complaint_but_self_positive(
-    text: str,
-    sentence: str,
-) -> bool:
-    """
-    Ignore cases where user only refers to other people's complaints
-    but says their own received product is fine.
-    """
-
-    reported_markers = ISSUE_RULES.get("reported_complaint_markers", [])
-    self_positive_markers = ISSUE_RULES.get("self_positive_markers", [])
-
-    if not isinstance(reported_markers, list):
-        reported_markers = []
-
-    if not isinstance(self_positive_markers, list):
-        self_positive_markers = []
-
-    has_reported_marker = any(
-        normalize_text(str(marker)) in text
-        for marker in reported_markers
-    ) or any(
-        normalize_text(str(marker)) in sentence
-        for marker in reported_markers
-    )
-
-    has_self_positive_marker = any(
-        normalize_text(str(marker)) in text
-        for marker in self_positive_markers
-    )
-
-    return has_reported_marker and has_self_positive_marker
-
-# ============================================================
-# DECISION / ROUTING AFTER SENTIMENT MODEL
-# ============================================================
-
-
-def has_critical_issue_keyword(text: str) -> bool:
-    """
-    Critical issue keywords are loaded from issue_rules.json.
-
-    JSON key:
-        critical_issue_keywords
-    """
-
-    critical_keywords = get_rule_list(
-        "critical_issue_keywords"
-    )
-
-    for keyword in critical_keywords:
-        if contains_keyword(text, keyword):
-            return True
-
-    return False
-
-def is_generic_fallback_marker(marker: str) -> bool:
-    """
-    Generic markers are loaded from issue_rules.json.
-
-    JSON key:
-        generic_fallback_markers
-    """
-
-    normalized_marker = normalize_text(marker)
-
-    if not normalized_marker:
-        return True
-
-    generic_markers = set(
-        get_rule_list("generic_fallback_markers")
-    )
-
-    return normalized_marker in generic_markers
-
-def merge_rule_group(
-    rules: dict[str, list[str]],
-    source: Any,
-) -> None:
-    """
-    Merge one rule group into the final rules dictionary.
-
-    Only the four standardized issue types are accepted.
-    """
-
-    if not isinstance(source, dict):
-        return
-
-    for issue_type, keywords in source.items():
-        normalized_issue_type = str(issue_type).upper()
-
-        if normalized_issue_type not in VALID_ISSUE_TYPES:
-            continue
-
-        if not isinstance(keywords, list):
-            continue
-
-        rules.setdefault(normalized_issue_type, [])
-        rules[normalized_issue_type].extend(keywords)
-
-
-def get_keywords_for_category(category: str | None) -> dict[str, list[str]]:
-    """
-    Build keyword rules for a product.
-
-    Final rule set:
-        GENERAL + product group rule
-    """
-
-    rules: dict[str, list[str]] = {}
-
-    general_rules = ISSUE_RULES.get("GENERAL", {})
-    merge_rule_group(rules, general_rules)
-
-    product_group = normalize_product_group(category)
-    group_rules = ISSUE_RULES.get(product_group, {})
-    merge_rule_group(rules, group_rules)
-
-    cleaned_rules: dict[str, list[str]] = {}
-
-    for issue_type, keywords in rules.items():
-        unique_keywords = sorted(
-            {
-                normalize_text(str(keyword))
-                for keyword in keywords
-                if normalize_text(str(keyword))
-            },
-            key=len,
-            reverse=True,
-        )
-
-        cleaned_rules[issue_type] = unique_keywords
-
-    return cleaned_rules
-
-
-def has_explicit_issue_keyword(
-    text: str,
-    category: str | None = "GENERAL",
-) -> bool:
-    """
-    Check whether review contains any explicit issue phrase from JSON rules.
-    Used to let 4-5 star reviews with real complaints enter issue detection.
-    """
-
-    category_keywords = get_keywords_for_category(category)
-
-    for keywords in category_keywords.values():
-        for keyword in keywords:
-            if contains_keyword(text, keyword):
-                sentence = find_matching_sentence(text, keyword)
-
-                if not sentence:
-                    continue
-
-                if has_positive_context(sentence, keyword):
-                    continue
-
-                if not has_negative_context(sentence, keyword):
-                    continue
-
-                return True
-
-    return False
-
-
-def has_strong_positive_review_context(text: str) -> bool:
-    """Detect clearly positive context. This does not change sentiment."""
-
-    patterns = ISSUE_RULES.get(
-        "strong_positive_review_patterns",
-        [
-            "rất thoải mái",
-            "thoải mái",
-            "co giãn tốt",
-            "co giãn rất tốt",
-            "rất tốt",
-            "khá tốt",
-            "dùng tốt",
-            "mặc tốt",
-            "mặc đẹp",
-            "hài lòng",
-            "ưng",
-            "ưng ý",
-            "mình thích",
-            "rất thích",
-            "order thêm",
-            "mua thêm",
-            "sẽ mua thêm",
-            "sẽ order thêm",
-            "đáng mua",
-            "ổn áp",
-        ],
-    )
-
-    if not isinstance(patterns, list):
-        return False
-
-    return any(
-        normalize_text(str(pattern)) in text
-        for pattern in patterns
-    )
-
-
-def is_platform_policy_complaint(text: str) -> bool:
-    """Complaint about platform/UI policy, not product issue."""
-
-    patterns = ISSUE_RULES.get(
-        "platform_policy_patterns",
-        [
-            "đừng buộc khách hàng phải có hình ảnh sản phẩm",
-            "buộc khách hàng phải có hình ảnh sản phẩm",
-            "bắt khách hàng phải có hình ảnh sản phẩm",
-            "phải có hình ảnh sản phẩm",
-            "bắt buộc thêm hình ảnh",
-            "bắt phải thêm hình ảnh",
-            "không muốn thêm hình ảnh",
-        ],
-    )
-
-    if not isinstance(patterns, list):
-        return False
-
-    return any(
-        normalize_text(str(pattern)) in text
-        for pattern in patterns
-    )
-
-
-def is_future_uncertainty_not_issue(text: str) -> bool:
-    """
-    Future uncertainty is not an actual issue.
-
-    Example:
-        không biết quần có bị bai chun không
-        dùng lâu mới biết có bền không
-    """
-
-    uncertainty_patterns = ISSUE_RULES.get(
-        "future_uncertainty_patterns",
-        [
-            "không biết",
-            "ko biết",
-            "chưa biết",
-            "không rõ",
-            "ko rõ",
-            "trong tương lai",
-            "dùng lâu mới biết",
-            "dùng thêm mới biết",
-            "chưa dùng lâu",
-        ],
-    )
-
-    future_defect_patterns = ISSUE_RULES.get(
-        "future_defect_patterns",
-        [
-            "có bị",
-            "có hỏng",
-            "có lỗi",
-            "có bai",
-            "có bền",
-            "bị bai",
-            "bị giãn",
-            "bị hỏng",
-            "bị lỗi",
-        ],
-    )
-
-    if not isinstance(uncertainty_patterns, list):
-        uncertainty_patterns = []
-
-    if not isinstance(future_defect_patterns, list):
-        future_defect_patterns = []
-
-    has_uncertainty = any(
-        normalize_text(str(pattern)) in text
-        for pattern in uncertainty_patterns
-    )
-
-    has_future_defect = any(
-        normalize_text(str(pattern)) in text
-        for pattern in future_defect_patterns
-    )
-
-    return has_uncertainty and has_future_defect
-
-
-def should_check_issue(
-    text: str,
-    sentiment: str | None,
-    rating: int | float | None = None,
-    category: str | None = "GENERAL",
-) -> bool:
-    """
-    Decide whether a review should enter issue detection.
-
-    This function does not change sentiment.
-    It only decides whether to run issue rules.
-    """
-
-    normalized_sentiment = normalize_sentiment(sentiment)
-    normalized_rating = normalize_rating(rating)
-
-    if normalized_sentiment in {"Neutral", "Negative"}:
-        return True
-
-    if normalized_rating is not None and normalized_rating <= 3:
-        return True
-
-    if has_critical_issue_keyword(text):
-        return True
-
-    if has_explicit_issue_keyword(text, category=category):
-        return True
-
-    return False
-
-
-def should_force_issue_from_sentiment(
-    sentiment: str | None,
-    rating: int | float | None = None,
-    text: str | None = None,
-) -> bool:
-    """
-    Decide whether to create fallback issue when no explicit issue keyword is found.
-
-    This does not change sentiment.
-    It only controls negative_sentiment_fallback.
-    """
-
-    normalized_sentiment = normalize_sentiment(sentiment)
-    normalized_rating = normalize_rating(rating)
-
-    # Never create fallback issue for 4-5 star reviews.
-    # If there is a real issue, JSON rules already detect it before fallback.
-    if normalized_rating is not None and normalized_rating >= 4:
-        return False
-
-    if normalized_sentiment == "Negative":
-        return True
-
-    if normalized_rating is not None and normalized_rating <= 2:
-        return True
-
-    return False
-
-# ============================================================
-# SCORING HELPERS
-# ============================================================
-
-
-def keyword_score(keyword: str) -> int:
-    """Infer score level from keyword length."""
-
-    normalized_keyword = normalize_text(keyword)
-
-    if not normalized_keyword:
-        return 0
-
-    words = normalized_keyword.split()
-
-    if len(words) >= 3:
-        return STRONG_SCORE
-
-    if len(words) == 2:
-        return MEDIUM_SCORE
-
-    return WEAK_SCORE
-
-
-def add_score(
-    scores: dict[str, int],
-    matched_keywords: dict[str, list[str]],
-    issue_type: str,
-    keyword: str,
-    score: int,
-) -> None:
-    if issue_type not in VALID_ISSUE_TYPES:
-        return
-
-    if score <= 0:
-        return
-
-    scores[issue_type] = scores.get(issue_type, 0) + score
-
-    if keyword not in matched_keywords.setdefault(issue_type, []):
-        matched_keywords[issue_type].append(keyword)
-
-
-def apply_builtin_scoring(
-    text: str,
-    scores: dict[str, int],
-    matched_keywords: dict[str, list[str]],
-) -> None:
-    """
-    Built-in keyword rules are intentionally disabled.
-
-    Issue keywords are maintained in backend/app/rules/issue_rules.json.
-    Keep this function as a compatibility no-op.
-    """
-
-    return None
-
-
-def apply_json_rule_scoring(
-    text: str,
-    category: str | None,
-    scores: dict[str, int],
-    matched_keywords: dict[str, list[str]],
-) -> None:
-    """Apply keyword rules from issue_rules.json."""
-
-    category_keywords = get_keywords_for_category(category)
-
-    for issue_type, keywords in category_keywords.items():
-        for keyword in keywords:
-            if not contains_keyword(text, keyword):
-                continue
-
-            sentence = find_matching_sentence(
-                text=text,
-                keyword=keyword,
-            )
-
-            if not sentence:
-                continue
-
-            if is_reported_complaint_but_self_positive(
-                text=text,
-                sentence=sentence,
-            ):
-                continue
-
-            if has_positive_context(
-                sentence=sentence,
-                keyword=keyword,
-            ):
-                continue
-
-            if not has_negative_context(
-                sentence=sentence,
-                keyword=keyword,
-            ):
-                continue
-
-            add_score(
-                scores=scores,
-                matched_keywords=matched_keywords,
-                issue_type=issue_type,
-                keyword=keyword,
-                score=keyword_score(keyword),
-            )
-
-
-def apply_sentiment_rating_bonus(
-    scores: dict[str, int],
-    sentiment: str | None,
-    rating: int | float | None,
-) -> None:
-    normalized_sentiment = normalize_sentiment(sentiment)
-    normalized_rating = normalize_rating(rating)
-
-    has_negative_signal = normalized_sentiment == "Negative"
-    has_low_rating = (
-        normalized_rating is not None
-        and normalized_rating <= 2
-    )
-
-    for issue_type in list(scores.keys()):
-        if scores[issue_type] <= 0:
-            continue
-
-        # Do not let a wrong Negative prediction amplify weak matches in 4-5 star reviews.
-        if has_negative_signal and not (
-            normalized_rating is not None
-            and normalized_rating >= 4
-        ):
-            scores[issue_type] += NEGATIVE_BONUS
-
-        if has_low_rating:
-            scores[issue_type] += LOW_RATING_BONUS
-
-
-def apply_context_adjustments(
-    text: str,
-    scores: dict[str, int],
-    matched_keywords: dict[str, list[str]],
-) -> None:
-    """
-    Context-aware adjustment.
-
-    This function avoids keyword-only rules and uses only explicit phrases.
-    """
-
-    service_context_keywords = [
-        "không bảo hành",
-        "từ chối bảo hành",
-        "bảo hành lâu",
-        "bảo hành không được",
-        "shop không hỗ trợ",
-        "shop không phản hồi",
-        "không hoàn tiền",
-        "không cho đổi trả",
-    ]
-
-    if any(contains_keyword(text, normalize_text(keyword)) for keyword in service_context_keywords):
-        add_score(
-            scores=scores,
-            matched_keywords=matched_keywords,
-            issue_type=CUSTOMER_SERVICE_RETURNS,
-            keyword="service_return_context",
-            score=STRONG_SCORE,
-        )
-
-    shipping_context_keywords = [
-        "giao thiếu",
-        "giao sai",
-        "giao nhầm",
-        "không nhận được hàng",
-        "chưa nhận được hàng",
-        "bên giao hàng",
-    ]
-
-    if any(contains_keyword(text, normalize_text(keyword)) for keyword in shipping_context_keywords):
-        add_score(
-            scores=scores,
-            matched_keywords=matched_keywords,
-            issue_type=SHIPPING_LOGISTICS,
-            keyword="shipping_context",
-            score=STRONG_SCORE,
-        )
-
-    pricing_context_keywords = [
-        "không đáng tiền",
-        "đắt so với chất lượng",
-        "mắc so với chất lượng",
-        "phí tiền",
-        "uổng tiền",
-    ]
-
-    if any(contains_keyword(text, normalize_text(keyword)) for keyword in pricing_context_keywords):
-        add_score(
-            scores=scores,
-            matched_keywords=matched_keywords,
-            issue_type=PRICING_PROMOTIONS,
-            keyword="pricing_context",
-            score=STRONG_SCORE,
-        )
-
-
-def initialize_issue_scores() -> tuple[dict[str, int], dict[str, list[str]]]:
-    scores = {
-        PRODUCT_QUALITY: 0,
-        SHIPPING_LOGISTICS: 0,
-        CUSTOMER_SERVICE_RETURNS: 0,
-        PRICING_PROMOTIONS: 0,
-    }
-
-    matched_keywords = {
-        PRODUCT_QUALITY: [],
-        SHIPPING_LOGISTICS: [],
-        CUSTOMER_SERVICE_RETURNS: [],
-        PRICING_PROMOTIONS: [],
-    }
-
-    return scores, matched_keywords
-
-
-def score_issues(
-    content: str,
-    sentiment: str | None = None,
-    category: str | None = "GENERAL",
-    rating: int | float | None = None,
-) -> tuple[dict[str, int], dict[str, list[str]]]:
-    text = normalize_text(content)
-
-    scores, matched_keywords = initialize_issue_scores()
-
-    apply_builtin_scoring(
-        text=text,
-        scores=scores,
-        matched_keywords=matched_keywords,
-    )
-
-    apply_json_rule_scoring(
-        text=text,
-        category=category,
-        scores=scores,
-        matched_keywords=matched_keywords,
-    )
-
-    apply_context_adjustments(
-        text=text,
-        scores=scores,
-        matched_keywords=matched_keywords,
-    )
-
-    apply_sentiment_rating_bonus(
-        scores=scores,
-        sentiment=sentiment,
-        rating=rating,
-    )
-
-    return scores, matched_keywords
-
-# ============================================================
-# FALLBACK ISSUE
-# ============================================================
-
-
-def infer_fallback_issue_type(text: str) -> str | None:
-    """
-    Infer one issue type when a Negative review does not match explicit issue.
-
-    Fallback markers are loaded from issue_rules.json.
-
-    Important:
-        - Do not default to PRODUCT_QUALITY.
-        - Ignore generic fallback markers.
-        - If no reliable fallback marker is found, return None.
-    """
-
-    text = normalize_text(text)
-
-    fallback_markers = ISSUE_RULES.get("fallback_markers", {})
-
-    if not isinstance(fallback_markers, dict):
-        return None
-
-    priority_order = [
-        SHIPPING_LOGISTICS,
-        CUSTOMER_SERVICE_RETURNS,
-        PRICING_PROMOTIONS,
-        PRODUCT_QUALITY,
-    ]
-
-    for issue_type in priority_order:
-        markers = fallback_markers.get(issue_type, [])
-
-        if not isinstance(markers, list):
-            continue
-
-        for marker in markers:
-            normalized_marker = normalize_text(str(marker))
-
-            if not normalized_marker:
-                continue
-
-            if is_generic_fallback_marker(normalized_marker):
-                continue
-
-            if contains_keyword(text, normalized_marker):
-                return issue_type
-
-    return None
-
-# ============================================================
-# DETECT ISSUES
-# ============================================================
-
-
-def detect_issues(
-    content: str,
-    sentiment: str | None = None,
-    category: str | None = "GENERAL",
-    rating: int | float | None = None,
-) -> list[dict[str, Any]]:
-    """Detect issues from a review using score-based multi-label detection."""
-
-    text = normalize_text(content)
-
-    if not text:
-        return []
-
-    if is_platform_policy_complaint(text):
-        return []
-
-    normalized_rating = normalize_rating(rating)
-
-    if (
-        normalized_rating is not None
-        and normalized_rating >= 4
-        and is_future_uncertainty_not_issue(text)
-        and has_strong_positive_review_context(text)
-    ):
-        return []
-
-    if not should_check_issue(
-        text=text,
-        sentiment=sentiment,
-        rating=rating,
-        category=category,
-    ):
-        return []
-
-    scores, matched_keywords = score_issues(
-        content=content,
-        sentiment=sentiment,
-        category=category,
-        rating=rating,
-    )
-
-    detected: list[dict[str, Any]] = []
-
-    for issue_type, score in scores.items():
-        if score >= MIN_ISSUE_SCORE:
-            detected.append({
-                "issue_type": issue_type,
-                "matched_keyword": ", ".join(
-                    matched_keywords.get(issue_type, [])
-                ),
-                "score": score,
-            })
-
-    detected.sort(
-        key=lambda item: item["score"],
-        reverse=True,
-    )
-
-    if not detected and should_force_issue_from_sentiment(
-        sentiment=sentiment,
-        rating=rating,
-        text=text,
-    ):
-        fallback_issue_type = infer_fallback_issue_type(text)
-
-        if fallback_issue_type is not None:
-            detected.append({
-                "issue_type": fallback_issue_type,
-                "matched_keyword": "negative_sentiment_fallback",
-                "score": FALLBACK_SCORE,
-            })
-
-    return detected
+        accepted = [item for item in evidence["occurrences"] if item["issue_type"] == kind and item["accepted"]
+                    and item["weight"] >= scoring["threshold"]]
+        reason = f"Có bằng chứng trải nghiệm thực tế về {ISSUE_LABELS[kind].lower()}; trọng số cao nhất {score} đạt ngưỡng {scoring['threshold']}."
+        details = {"rule_version": evidence["rule_version"], "context_rules_version": evidence["context_rules_version"],
+                   "category": category or "GENERAL", "category_label": category_label(category),
+                   "issue_group": normalize_product_group(category), "score": score, "threshold": scoring["threshold"],
+                   "aggregation": scoring["aggregation"], "reason_code": "actual_rule_weight_meets_threshold", "reason": reason,
+                   "classification_source": "text_rule",
+                   "review_check": evidence["review_check"],
+                   "matches": [_snapshot_match(item, evidence["clauses"]) for item in accepted],
+                   "decisive_rule_ids": sorted({rid for item in accepted if item["weight"] == score
+                                                for rid in (item['rule_id'], item.get('routing_rule_id')) if rid}),
+                   "supporting_matches": [_snapshot_match(item, evidence["clauses"]) for item in evidence["occurrences"]
+                                          if item["issue_type"] == kind and item["accepted"] and item["weight"] < scoring["threshold"]],
+                   "excluded_occurrences": [_snapshot_match(item, evidence["clauses"]) for item in evidence["occurrences"]
+                                            if item["issue_type"] == kind and not item["accepted"]]}
+        detected.append({"issue_type": kind, "matched_keyword": _keyword_summary([item["keyword"] for item in accepted]), "score": score, "evidence": details})
+    detected.sort(key=lambda item: item["score"], reverse=True)
+    weak = any(item["accepted"] and item["weight"] < scoring["threshold"] for item in evidence["occurrences"])
+    fallback = label == "Negative" and not detected
+    if fallback:
+        reason = "Review có nhãn cuối Negative nhưng chưa đủ bằng chứng xác định nhóm cụ thể; xếp Vấn đề khác để kiểm tra thêm."
+        details = {"rule_version": evidence["rule_version"], "context_rules_version": evidence["context_rules_version"],
+                   "category": category or "GENERAL", "category_label": category_label(category),
+                   "issue_group": normalize_product_group(category), "classification_source": "sentiment_policy",
+                   "score": 0, "threshold": scoring["threshold"], "aggregation": scoring["aggregation"],
+                   "reason_code": "negative_sentiment_unclassified", "reason": reason,
+                   "review_check": evidence["review_check"], "matches": [],
+                   "decisive_rule_ids": [policy["negative_fallback_rule_id"]],
+                   "fallback_text": str(content or ""),
+                   "supporting_matches": [_snapshot_match(item, evidence["clauses"]) for item in evidence["occurrences"] if item["accepted"]],
+                   "excluded_occurrences": [_snapshot_match(item, evidence["clauses"]) for item in evidence["occurrences"] if not item["accepted"]]}
+        detected.append({"issue_type": policy["negative_fallback_issue_type"], "matched_keyword": "",
+                         "score": 0, "evidence": details})
+    needs_review = fallback or (not detected and (evidence["review_check"]["requested"] or weak))
+    assessment = {"rule_version": evidence["rule_version"], "category": category or "GENERAL",
+                  "issue_group": normalize_product_group(category), "review_check": evidence["review_check"],
+                  "eligible": True, "fallback_used": fallback,
+                  "needs_review": needs_review, "issue_count": len(detected), "scores": scores,
+                  "threshold": scoring["threshold"], "has_weak_evidence": weak,
+                  "reason": detected[0]["evidence"]["reason"] if fallback else
+                            "Nội dung cần kiểm tra thêm; chưa đủ bằng chứng xác định vấn đề cụ thể." if needs_review else
+                            "Đã xác định vấn đề từ bằng chứng trong nội dung." if detected else "Chưa có bằng chứng đủ mạnh để xác định vấn đề."}
+    return {"issues": detected, "assessment": assessment, "trace": evidence}
+
+
+def detect_issues(content, sentiment=None, category="GENERAL", rating=None):
+    return assess_issues(content, sentiment, category, rating)["issues"]
+
+
+def serialize_issue(issue):
+    return {"id": issue.id, "review_id": issue.review_id, "issue_type": issue.issue_type,
+            "issue_label": ISSUE_LABELS.get(issue.issue_type, issue.issue_type),
+            "matched_keyword": issue.matched_keyword, "evidence": issue.evidence}
 
 # ============================================================
 # DELETE ISSUE ANALYSIS
@@ -1196,12 +274,16 @@ def save_issue_analysis(
         review_id=review_id,
     )
 
-    detected_issues = detect_issues(
+    decision = assess_issues(
         content=content,
         sentiment=sentiment,
         category=category,
         rating=rating,
-    ) or []
+    )
+    detected_issues = decision["issues"]
+    review = db.get(Review, review_id)
+    if review is not None:
+        review.issue_assessment = decision["assessment"]
 
     results: list[IssueAnalysis] = []
 
@@ -1221,12 +303,17 @@ def save_issue_analysis(
                 "matched_keyword",
                 item.get("source", "issue_detection"),
             ),
+            evidence=item["evidence"],
         )
 
         db.add(issue)
         results.append(issue)
 
     db.flush()
+    # Bulk deletion does not refresh an already loaded relationship. Counts
+    # and snapshots in the same request must see the replacement issue set.
+    if review is not None:
+        db.expire(review, ["issue_analysis"])
 
     return results
 
@@ -1247,19 +334,7 @@ def get_review_issues(
         .all()
     )
 
-    return [
-        {
-            "id": issue.id,
-            "review_id": issue.review_id,
-            "issue_type": issue.issue_type,
-            "issue_label": ISSUE_LABELS.get(
-                issue.issue_type,
-                issue.issue_type,
-            ),
-            "matched_keyword": issue.matched_keyword,
-        }
-        for issue in issues
-    ]
+    return [serialize_issue(issue) for issue in issues]
 
 # ============================================================
 # GET PRODUCT ISSUE SUMMARY
@@ -1382,6 +457,7 @@ def get_product_issues(
                 issue.issue_type,
             ),
             "matched_keyword": issue.matched_keyword,
+            "evidence": issue.evidence,
             "review": {
                 "id": review.id,
                 "platform_review_id": review.platform_review_id,

@@ -23,7 +23,7 @@ const issueLabelMap: Record<string, string> = {
   CUSTOMER_SERVICE: "Dịch vụ khách hàng",
   PRICE: "Giá cả",
   PACKAGING: "Đóng gói",
-  OTHER: "Khác",
+  OTHER: "Vấn đề khác",
 };
 
 function shortenLabel(label: string) {

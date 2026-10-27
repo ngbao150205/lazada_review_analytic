@@ -125,7 +125,8 @@ function History() {
         product.url.toLowerCase().includes(query) ||
         product.platform_product_id.toLowerCase().includes(query) ||
         String(product.id).includes(query) ||
-        (product.category || "").toLowerCase().includes(query)
+        (product.category || "").toLowerCase().includes(query) ||
+        (product.category_label || "").toLowerCase().includes(query)
       );
     });
   }, [products, searchText]);
@@ -260,7 +261,7 @@ function History() {
 
                       {product.category && (
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                          {product.category}
+                          {product.category_label || product.category}
                         </span>
                       )}
                     </div>

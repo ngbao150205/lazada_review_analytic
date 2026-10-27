@@ -1,4 +1,5 @@
 import logging
+from requests import RequestException
 
 from fastapi import (
     APIRouter,
@@ -29,7 +30,12 @@ from app.services.product_service import (
     analyze_product,
 )
 from app.services.crawler_client import CrawlerServiceError
+from app.services.reanalysis_service import (
+    reanalyze_product, ReanalysisProductNotFound, ReanalysisEmptyProduct, ReanalysisBusy,
+)
 from app.security.auth import get_current_user
+from app.services.category_service import category_label, issue_group_for_category
+from app.services.insight_evidence_service import get_insight_evidence
 
 from app.services.product_analysis_service import (
     get_product_analysis,
@@ -128,6 +134,8 @@ def get_products_api(
                     "stored_total_reviews": product.total_reviews,
                     "product_type": product.product_type,
                     "category": product.category,
+                    "category_label": category_label(product.category),
+                    "issue_group": issue_group_for_category(product.category),
                     "is_active": product.is_active,
                     "created_at": product.created_at,
                     "updated_at": product.updated_at,
@@ -172,6 +180,8 @@ def analyze_product_endpoint(
 
     except CrawlerServiceError as e:
         headers = {"Retry-After": e.retry_after} if e.retry_after else None
+        if e.error_code:
+            headers = {**(headers or {}), "X-Crawl-Error-Code": e.error_code}
         raise HTTPException(status_code=e.status_code, detail=str(e), headers=headers) from e
 
     except ValueError as e:
@@ -186,6 +196,29 @@ def analyze_product_endpoint(
             status_code=500,
             detail=str(e),
         )
+
+
+@router.post("/{product_id}/reanalyze")
+def reanalyze_product_endpoint(
+    product_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Re-run AI, sentiment rules, issues and risks on saved reviews; never crawl."""
+    try:
+        return reanalyze_product(db, product_id, owner_id=user.id)
+    except ReanalysisProductNotFound as error:
+        raise HTTPException(404, str(error)) from error
+    except ReanalysisEmptyProduct as error:
+        raise HTTPException(400, str(error)) from error
+    except ReanalysisBusy as error:
+        raise HTTPException(409, str(error)) from error
+    except (RequestException, ValueError) as error:
+        logger.exception("AI reanalysis failed for product %s", product_id)
+        raise HTTPException(502, "Không thể hoàn tất phân tích AI lại. Chưa lưu thay đổi của lượt này; vui lòng kiểm tra AI service và thử lại.") from error
+    except Exception as error:
+        logger.exception("Product reanalysis failed for product %s", product_id)
+        raise HTTPException(500, "Không thể lưu kết quả phân tích lại. Chưa lưu thay đổi của lượt này.") from error
 
 
 # ============================================================
@@ -224,6 +257,24 @@ def get_product_analysis_api(
 # Endpoint:
 #   GET /products/{product_id}/histories
 # ============================================================
+
+@router.get("/{product_id}/insights/evidence")
+def get_insight_evidence_api(
+    product_id: int,
+    evidence_key: str,
+    history_id: Optional[int] = None,
+    page: int = 1,
+    page_size: int = 10,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    require_owned_product(db, product_id, user.id)
+    result = get_insight_evidence(db, product_id, evidence_key, history_id=history_id,
+                                  page=page, page_size=page_size)
+    if result is None:
+        raise HTTPException(404, "Không có bằng chứng cho nhận xét/lần phân tích này.")
+    return result
+
 
 @router.get("/{product_id}/histories")
 def get_product_histories_api(

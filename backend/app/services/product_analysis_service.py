@@ -5,6 +5,9 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session, selectinload
 
 from app.services.rating_summary import summarize_ratings
+from app.services.risk_service import serialize_risk
+from app.services.insight_service import build_product_insights, public_insights
+from app.services.category_service import category_label, issue_group_for_category
 
 from database.models import (
     Product,
@@ -76,7 +79,8 @@ def get_product_histories(
             "negative_rate": h.negative_rate,
             "neutral_rate": h.neutral_rate,
             "issue_summary": issue_data,
-            "risk_summary": risk_data,
+            "risk_summary": risk_data if "FLAGGED" in risk_data else {"FLAGGED": 0},
+            "risk_summary_source": "snapshot" if "FLAGGED" in risk_data else "unavailable",
             "rating_summary": rating_data,
             "analyzed_at": h.analyzed_at.isoformat() if h.analyzed_at else None,
         })
@@ -187,12 +191,8 @@ def get_product_analysis(
         # RISK
         # ====================================================
 
-        if review.risk_detection:
-
-            risk = review.risk_detection
-
-            if risk.risk_flag:
-                risk_counter[risk.risk_level or "UNKNOWN"] += 1
+        if serialize_risk(review.risk_detection, review.content)["risk_flag"]:
+            risk_counter["FLAGGED"] += 1
 
     # ========================================================
     # 5. SENTIMENT COUNTS
@@ -293,6 +293,8 @@ def get_product_analysis(
             "neutral_rate": selected_history["neutral_rate"],
             "issue_summary": selected_history["issue_summary"],
             "risk_summary": selected_history["risk_summary"],
+            "risk_summary_source": selected_history["risk_summary_source"],
+            "risk_total_reviews": selected_history["total_reviews"],
             "history_id": selected_history["id"],
             "analyzed_at": selected_history["analyzed_at"],
             "rating_summary": selected_history["rating_summary"],
@@ -309,7 +311,9 @@ def get_product_analysis(
             "negative_rate": negative_rate,
             "neutral_rate": neutral_rate,
             "issue_summary": dict(issue_counter),
-            "risk_summary": dict(risk_counter),
+            "risk_summary": {"FLAGGED": risk_counter["FLAGGED"]},
+            "risk_summary_source": "current",
+            "risk_total_reviews": total_reviews,
             "history_id": None,
             "analyzed_at": None,
             "rating_summary": summarize_ratings(reviews),
@@ -321,6 +325,25 @@ def get_product_analysis(
     if selected_history and selected_history["id"] == all_histories[0]["id"] and analysis_data["rating_summary"] is None:
         analysis_data["rating_summary"] = summarize_ratings(reviews)
         analysis_data["rating_summary_source"] = "current"
+
+    # A legacy severity snapshot cannot describe the new fraud-only policy.
+    # The latest dashboard may explicitly show current rules/current reviews;
+    # an older selected snapshot remains unavailable rather than fabricated.
+    if selected_history and selected_history["id"] == all_histories[0]["id"] and analysis_data["risk_summary_source"] == "unavailable":
+        analysis_data.update(risk_summary={"FLAGGED": risk_counter["FLAGGED"]},
+                             risk_summary_source="current", risk_total_reviews=total_reviews)
+
+    snapshot = db.get(AnalysisHistory, selected_history["id"]) if selected_history else None
+    if snapshot and snapshot.insights is not None:
+        analysis_data["insights"] = public_insights(snapshot.insights)
+        analysis_data["insights_source"] = "snapshot"
+    elif not selected_history or selected_history["id"] == all_histories[0]["id"]:
+        analysis_data["insights"] = public_insights(build_product_insights(
+            reviews, category=product.category, context=product.collection_context))
+        analysis_data["insights_source"] = "current"
+    else:
+        analysis_data["insights"] = None
+        analysis_data["insights_source"] = "unavailable"
 
     latest_history = all_histories[0] if len(all_histories) > 0 else None
 
@@ -339,6 +362,8 @@ def get_product_analysis(
             "rating": product.rating,
             "product_type": product.product_type,
             "category": product.category,
+            "category_label": category_label(product.category),
+            "issue_group": issue_group_for_category(product.category),
             "total_reviews": product.total_reviews,
             "is_active": product.is_active,
             "created_at": product.created_at,

@@ -1,0 +1,249 @@
+{
+  "rule_version": "product_insights_v1",
+  "min_strength_reviews": 3,
+  "strength_min_positive_share": 0.75,
+  "mixed_min_reviews": 2,
+  "mixed_min_share": 0.25,
+  "recurring_min_reviews": 3,
+  "small_sample_reviews": 10,
+  "max_items": 3,
+  "max_examples": 3,
+  "topics": [
+    {
+      "id": "fabric",
+      "label": "Chất liệu vải",
+      "groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "keywords": [
+        "vải",
+        "chất liệu",
+        "nhung",
+        "mỏng",
+        "dày"
+      ],
+      "action": "Đối chiếu chất liệu thực tế với mô tả; kiểm tra độ dày và bổ sung ảnh, thông tin chất liệu rõ hơn."
+    },
+    {
+      "id": "stitching",
+      "label": "Đường may",
+      "groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "keywords": [
+        "đường may",
+        "chỉ thừa",
+        "đường chỉ",
+        "may"
+      ],
+      "action": "Kiểm tra đường may, chỉ thừa và độ hoàn thiện trước khi đóng gói; đối chiếu các lô bị phản ánh."
+    },
+    {
+      "id": "sizing",
+      "label": "Kích cỡ và độ vừa",
+      "groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "keywords": [
+        "size",
+        "kích cỡ",
+        "kích thước",
+        "rộng",
+        "chật",
+        "vừa"
+      ],
+      "action": "Đo lại sản phẩm thực tế, đối chiếu bảng size và cập nhật hướng dẫn chọn kích cỡ."
+    },
+    {
+      "id": "battery",
+      "label": "Pin và sạc",
+      "groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "keywords": [
+        "pin",
+        "sạc"
+      ],
+      "aspects": [
+        "BATTERY"
+      ],
+      "action": "Kiểm tra pin, bộ sạc và thời lượng sử dụng trên các đơn bị phản ánh; hướng dẫn sử dụng và đổi trả phù hợp."
+    },
+    {
+      "id": "sound",
+      "label": "Âm thanh",
+      "groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "keywords": [
+        "âm thanh",
+        "loa",
+        "tai nghe",
+        "rè",
+        "âm bass"
+      ],
+      "aspects": [
+        "SOUND"
+      ],
+      "action": "Kiểm tra âm thanh, kết nối và các thiết bị/lô hàng liên quan; hướng dẫn kiểm tra hoặc bảo hành."
+    },
+    {
+      "id": "packaging",
+      "label": "Đóng gói và bao bì",
+      "keywords": [
+        "đóng gói",
+        "gói hàng",
+        "hộp",
+        "bao bì",
+        "box"
+      ],
+      "aspects": [
+        "PACKAGING"
+      ],
+      "action": "Rà soát vật liệu bảo vệ, cách chèn chống va đập và tình trạng hộp trước khi bàn giao vận chuyển."
+    },
+    {
+      "id": "shipping",
+      "label": "Giao hàng",
+      "keywords": [
+        "giao hàng",
+        "giao chậm",
+        "giao nhanh",
+        "giao lâu",
+        "ship",
+        "vận chuyển",
+        "giao nhận"
+      ],
+      "aspects": [
+        "SHIPPING"
+      ],
+      "issue_types": [
+        "SHIPPING_LOGISTICS"
+      ],
+      "action": "Đối chiếu thời gian xử lý và giao nhận của các đơn bị phản ánh; làm việc với đơn vị vận chuyển và điều chỉnh thời gian cam kết."
+    },
+    {
+      "id": "support",
+      "label": "Hỗ trợ và đổi trả",
+      "keywords": [
+        "hỗ trợ",
+        "đổi trả",
+        "trả hàng",
+        "hoàn tiền",
+        "dịch vụ",
+        "tư vấn",
+        "phản hồi"
+      ],
+      "aspects": [
+        "SUPPORT"
+      ],
+      "issue_types": [
+        "CUSTOMER_SERVICE_RETURNS"
+      ],
+      "action": "Rà soát các yêu cầu hỗ trợ, điều kiện đổi trả và thời gian phản hồi; liên hệ xử lý các trường hợp còn vướng mắc."
+    },
+    {
+      "id": "price",
+      "label": "Giá và khuyến mãi",
+      "keywords": [
+        "giá",
+        "đáng tiền",
+        "sale",
+        "khuyến mãi",
+        "voucher",
+        "đắt",
+        "rẻ"
+      ],
+      "aspects": [
+        "VALUE"
+      ],
+      "issue_types": [
+        "PRICING_PROMOTIONS"
+      ],
+      "action": "Đối chiếu giá, ưu đãi và điều kiện áp dụng trên các đơn bị phản ánh; làm rõ thông tin trước khi mua."
+    },
+    {
+      "id": "appearance",
+      "label": "Mẫu mã và màu sắc",
+      "keywords": [
+        "màu",
+        "mẫu mã",
+        "ngoại hình",
+        "kiểu dáng",
+        "thiết kế",
+        "hình ảnh"
+      ],
+      "aspects": [
+        "APPEARANCE"
+      ],
+      "action": "Đối chiếu màu sắc, kiểu dáng thực tế với ảnh và mô tả; cập nhật hình ảnh hoặc thông tin dễ gây hiểu nhầm."
+    },
+    {
+      "id": "durability",
+      "label": "Độ bền",
+      "keywords": [
+        "độ bền",
+        "bền",
+        "nhanh hỏng"
+      ],
+      "aspects": [
+        "DURABILITY"
+      ],
+      "action": "Kiểm tra các lô hàng bị phản ánh về độ bền; xác định điều kiện sử dụng và phương án bảo hành phù hợp."
+    },
+    {
+      "id": "functionality",
+      "label": "Khả năng sử dụng",
+      "keywords": [
+        "hoạt động",
+        "dễ sử dụng",
+        "hiệu năng",
+        "lực siết",
+        "lên nguồn",
+        "dùng được",
+        "sử dụng"
+      ],
+      "aspects": [
+        "FUNCTIONALITY"
+      ],
+      "action": "Kiểm tra chức năng trên các sản phẩm bị phản ánh, đối chiếu mô tả và bổ sung hướng dẫn sử dụng."
+    },
+    {
+      "id": "quality",
+      "label": "Trải nghiệm và chất lượng sản phẩm",
+      "keywords": [
+        "chất lượng",
+        "sản phẩm",
+        "hàng",
+        "tệ",
+        "dở",
+        "lỗi",
+        "hỏng"
+      ],
+      "aspects": [
+        "QUALITY"
+      ],
+      "issue_types": [
+        "PRODUCT_QUALITY"
+      ],
+      "action": "Đọc các bằng chứng liên quan, kiểm tra sản phẩm/lô hàng cụ thể và xác định nguyên nhân trước khi chọn biện pháp cải thiện."
+    }
+  ],
+  "positive_evidence": [
+    "đường may đẹp",
+    "đường may chắc",
+    "vải đẹp",
+    "vải mềm",
+    "vải mát",
+    "size chuẩn",
+    "pin tốt",
+    "âm thanh rõ"
+  ],
+  "negative_evidence": [
+    "đường may ẩu",
+    "may ẩu",
+    "đường may xấu",
+    "đường may kém",
+    "chỉ thừa"
+  ]
+}

@@ -1,7 +1,0 @@
-# Optional test image only; the application crawler has no browser dependency.
-FROM duancntt-crawler-service:latest
-USER root
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN pip install --no-cache-dir playwright==1.64.0 \
-    && python -m playwright install --with-deps chromium --no-shell
-USER crawler

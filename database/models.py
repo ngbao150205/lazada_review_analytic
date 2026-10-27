@@ -7,6 +7,7 @@ from sqlalchemy import (
     Float,
     Boolean,
     Text,
+    JSON,
     DateTime,
     ForeignKey,
     UniqueConstraint,
@@ -26,6 +27,31 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class ProductComparison(Base):
+    """Immutable comparison of two owned products; never replaces AI results."""
+    __tablename__ = "product_comparisons"
+    id = Column(Integer, primary_key=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_a_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_b_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    payload = Column(JSON, nullable=False)
+
+
+class ComparisonReview(Base):
+    """One frozen source review per side, shared by all its aspect links."""
+    __tablename__ = "comparison_reviews"
+    id = Column(Integer, primary_key=True)
+    comparison_id = Column(Integer, ForeignKey("product_comparisons.id", ondelete="CASCADE"), nullable=False, index=True)
+    side = Column(String(1), nullable=False)
+    source_review_id = Column(Integer, nullable=False)
+    review_reference = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    rating = Column(Integer, nullable=True)
+    review_date = Column(DateTime, nullable=True)
+    __table_args__ = (UniqueConstraint("comparison_id", "side", "source_review_id", name="uq_comparison_source_review"),)
 
 
 class AuthSession(Base):
@@ -87,6 +113,8 @@ class ReviewCollection(Base):
 class Product(Base):
 
     __tablename__ = "products"
+
+    collection_context = Column(JSON, nullable=True)
     # NULL keeps pre-authentication data intact until assigned by a local admin.
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
 
@@ -360,6 +388,8 @@ class Review(Base):
         index=True,
     )
 
+    issue_assessment = Column(JSON, nullable=True)
+
     """
     False
         Review chưa được model xử lý.
@@ -524,6 +554,8 @@ class ReviewAnalysis(Base):
         nullable=True,
     )
 
+    decision_details = Column(JSON, nullable=True)
+
     """
     Ví dụ:
 
@@ -615,6 +647,8 @@ class IssueAnalysis(Base):
         nullable=True,
     )
 
+    evidence = Column(JSON, nullable=True)
+
     # ========================================================
     # TIMESTAMP
     # ========================================================
@@ -688,13 +722,8 @@ class RiskDetection(Base):
         index=True,
     )
 
-    """
-    Giá trị:
-
-    LOW
-    MEDIUM
-    HIGH
-    """
+    # Legacy column retained for existing databases; new rules leave it NULL.
+    rule_version = Column(String(64), nullable=True)
 
     # ========================================================
     # RISK KEYWORD
@@ -833,6 +862,8 @@ class AnalysisHistory(Base):
 
     # Null on legacy histories: current reviews cannot reconstruct old ratings.
     rating_summary = Column(Text, nullable=True)
+
+    insights = Column(JSON, nullable=True)
 
     # ========================================================
     # TIMESTAMP

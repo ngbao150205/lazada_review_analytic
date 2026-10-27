@@ -7,7 +7,7 @@ import zipfile
 from datetime import date, datetime
 
 MAX_BYTES = 5 * 1024 * 1024
-MAX_ROWS = 10000
+MAX_ROWS = 1000000
 MAX_COLUMNS = 100
 MAX_EXPANDED_BYTES = 50 * 1024 * 1024
 

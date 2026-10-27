@@ -4,26 +4,20 @@ import re
 import hashlib
 import unicodedata
 from datetime import datetime, timezone
-from urllib.parse import urlsplit
 
 from database.models import ReviewCollection
 from app.services.product_service import analyze_collected_reviews
 from app.services.review_identity import fallback_id, fingerprint
 
 from app.services.file_parser import MAX_BYTES, MAX_ROWS, CollectionValidationError, parse_file
+from app.services.product_url import normalize_product_url
 
 
 def product_identity(url):
     try:
-        parsed = urlsplit(url.strip())
-        match = re.search(r"(?:-i|/i)(\d+)(?:-s\d+)?\.html$", parsed.path)
-        if (parsed.scheme != "https" or parsed.netloc.lower() not in {"lazada.vn", "www.lazada.vn"}
-                or not parsed.path.startswith("/products/") or not match or len(match.group(1)) > 32):
-            raise ValueError()
-    except (ValueError, AttributeError):
-        raise CollectionValidationError("Cần URL sản phẩm https://www.lazada.vn/products/...-i123-s456.html hợp lệ.")
-    product_id = match.group(1)
-    return product_id, f"https://www.lazada.vn/products/pdp-i{product_id}.html"
+        return normalize_product_url(url)
+    except ValueError as error:
+        raise CollectionValidationError(str(error)) from error
 
 
 def field(row, *names):
@@ -141,7 +135,7 @@ def collect_reviews(db, *, product_url=None, product_name, rows, source, owner_i
             "collection_provider": "file" if platform == "import" else "api",
             "reviews": reviews, "crawl_source": source, "crawl_status": "PARTIAL",
             "crawl_error": "Chỉ phân tích dữ liệu được gửi; chưa xác nhận đã có toàn bộ đánh giá sản phẩm.",
-        }, commit=False, owner_id=owner_id, allow_file_import=platform == "import")
+        }, commit=False, owner_id=owner_id, allow_file_import=platform == "import", category_url=product_url)
         # Includes existing rows whose text cannot be analyzed by the model.
         existing = result["existing_reviews"]
         counts["duplicates_in_database"] = existing

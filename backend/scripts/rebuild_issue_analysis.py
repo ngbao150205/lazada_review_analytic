@@ -19,13 +19,14 @@ if str(PROJECT_ROOT) not in sys.path:
 # IMPORT APPLICATION
 # ============================================================
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from database.connection import SessionLocal
 from database.models import Review
 
 from app.services.issue_service import (
-    save_issue_analysis
+    get_product_category,
+    save_issue_analysis,
 )
 
 
@@ -51,6 +52,7 @@ def rebuild_issue_analysis(
 
     reviews = (
         db.query(Review)
+        .options(selectinload(Review.product), selectinload(Review.analysis))
         .order_by(
             Review.id
         )
@@ -127,7 +129,11 @@ def rebuild_issue_analysis(
 
             content=review.content,
 
-            sentiment=sentiment
+            sentiment=sentiment,
+
+            category=get_product_category(review.product) or "GENERAL",
+
+            rating=review.rating,
 
         )
 

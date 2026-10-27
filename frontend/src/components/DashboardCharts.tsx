@@ -64,48 +64,38 @@ export function RatingChart({ summary, source }: {
   );
 }
 
-export function RiskChart({ summary, totalReviews, productId }: {
+export function RiskChart({ summary, totalReviews, productId, source }: {
   summary: Record<string, number>; totalReviews: number; productId: string;
+  source?: "snapshot" | "current" | "unavailable";
 }) {
-  const levels = [
-    { key: "HIGH", name: "Rủi ro cao", color: "#ef4444" },
-    { key: "MEDIUM", name: "Rủi ro trung bình", color: "#f59e0b" },
-    { key: "LOW", name: "Rủi ro thấp", color: "#3b82f6" },
+  const flagged = summary.FLAGGED ?? 0;
+  const data = [
+    { key: "flagged", name: "Có cảnh báo", value: flagged, color: "#ef4444" },
+    { key: "remaining", name: "Chưa phát hiện dấu hiệu", value: Math.max(0, totalReviews - flagged), color: "#cbd5e1" },
   ];
-  const unknown = Object.entries(summary).reduce((sum, [key, value]) => sum + (levels.some((level) => level.key === key) ? 0 : value), 0);
-  const data = levels.map((level) => ({ ...level, value: summary[level.key] ?? 0 }));
-  if (unknown) data.push({ key: "UNKNOWN", name: "Chưa rõ mức độ", color: "#94a3b8", value: unknown });
-  const flagged = data.reduce((sum, entry) => sum + entry.value, 0);
-  return (
-    <section aria-labelledby="risk-chart-title" className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 id="risk-chart-title" className="text-lg font-semibold text-slate-900">Cảnh báo rủi ro</h2>
-      <p className="mt-1 text-sm text-slate-500">Phân bố mức độ của các đánh giá được gắn cờ cảnh báo.</p>
-      {flagged ? <div className="relative mt-3 h-60" aria-hidden="true">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.filter((entry) => entry.value > 0)} dataKey="value" nameKey="name" innerRadius={72} outerRadius={96} paddingAngle={3} isAnimationActive={false}>
-              {data.filter((entry) => entry.value > 0).map((entry) => <Cell key={entry.key} fill={entry.color} />)}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} formatter={(value) => [number(Number(value)), "Đánh giá cảnh báo"]} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <strong className="text-3xl text-slate-900">{number(flagged)}</strong>
-          <span className="mt-1 text-xs text-slate-500">đánh giá cảnh báo</span>
-        </div>
-      </div> : <p className="my-6 rounded-xl bg-emerald-50 p-8 text-center text-sm text-emerald-800">Chưa phát hiện đánh giá có cảnh báo rủi ro.</p>}
+  return <section aria-labelledby="risk-chart-title" className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 id="risk-chart-title" className="text-lg font-semibold text-slate-900">Cảnh báo rủi ro</h2>
+    <p className="mt-1 text-sm text-slate-500">Dấu hiệu lừa đảo, hàng giả, hàng nhái hoặc fake trong đánh giá.</p>
+    {source === "unavailable" ? <p className="my-6 rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">
+      Lần phân tích cũ chưa lưu thống kê theo quy tắc mới. Chọn lần mới nhất để xem cảnh báo hiện có.
+    </p> : <>
+      {source === "current" && <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">Cảnh báo được xét theo quy tắc mới trên toàn bộ đánh giá hiện có.</p>}
+      {totalReviews > 0 ? <div className="relative mt-3 h-60" aria-hidden="true">
+        <ResponsiveContainer width="100%" height="100%"><PieChart>
+          <Pie data={data.filter((entry) => entry.value > 0)} dataKey="value" nameKey="name" innerRadius={72} outerRadius={96} paddingAngle={3} isAnimationActive={false}>
+            {data.filter((entry) => entry.value > 0).map((entry) => <Cell key={entry.key} fill={entry.color} />)}
+          </Pie>
+          <Tooltip contentStyle={tooltipStyle} formatter={(value) => [number(Number(value)), "Đánh giá"]} />
+        </PieChart></ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><strong className="text-3xl text-slate-900">{number(flagged)}</strong><span className="mt-1 text-xs text-slate-500">đánh giá cảnh báo</span></div>
+      </div> : <p className="my-6 rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">Chưa có đánh giá để kiểm tra.</p>}
       <ul className="mt-4 space-y-3 border-t border-slate-100 pt-4 text-sm">
-        {data.map((entry) => <li key={entry.key} className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 text-slate-600"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />{entry.name}</span>
-          <strong className="text-slate-900">{number(entry.value)}</strong>
-        </li>)}
+        {data.map((entry) => <li key={entry.key} className="flex items-center justify-between gap-3"><span className="flex items-center gap-2 text-slate-600"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />{entry.name}</span><strong>{number(entry.value)}</strong></li>)}
       </ul>
-      <p className="mt-4 text-xs leading-relaxed text-slate-500">
-        {totalReviews ? (flagged / totalReviews * 100).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) : 0}% trong {number(totalReviews)} đánh giá có cảnh báo. Mỗi đánh giá được tính một lần theo mức độ rủi ro; đánh giá chưa kiểm tra không được coi là an toàn.
-      </p>
-      <Link to={`/products/${productId}/risk`} className="mt-4 inline-block text-sm font-semibold text-blue-600 hover:underline">Xem các đánh giá rủi ro hiện có →</Link>
-    </section>
-  );
+      <p className="mt-4 text-xs leading-relaxed text-slate-500">{totalReviews ? (flagged / totalReviews * 100).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) : 0}% trong {number(totalReviews)} đánh giá có cảnh báo. Mỗi đánh giá tính một lần. Đây là phản ánh của người mua; chưa phát hiện dấu hiệu không đồng nghĩa sản phẩm an toàn.</p>
+    </>}
+    <Link to={`/products/${productId}/risk`} className="mt-4 inline-block text-sm font-semibold text-blue-600 hover:underline">Xem các đánh giá có cảnh báo hiện có →</Link>
+  </section>;
 }
 
 export function AnalysisTrendChart({ histories, selectedId }: { histories: AnalysisHistoryItem[]; selectedId?: number | null }) {

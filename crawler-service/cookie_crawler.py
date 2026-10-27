@@ -13,10 +13,37 @@ import unicodedata
 import pandas as pd
 from curl_cffi import requests as curl_requests
 from curl_cffi.requests.cookies import Cookies
+from curl_cffi.requests.exceptions import RequestException
 from dotenv import dotenv_values
 from lazada_common import CrawlUpstreamError, parse_product_url, normalize_review_date
 
+from lazada_response import (
+    ReviewPageError, REQUEST_TIMEOUT_SECONDS, MAX_REQUEST_ATTEMPTS,
+    transport_error, validate_http_response, parse_review_page,
+)
+
 logger = logging.getLogger(__name__)
+
+
+def request_review_page(session, headers, params):
+    """Retry transport/5xx failures once, never an access challenge or bad JSON."""
+    for attempt in range(1, MAX_REQUEST_ATTEMPTS + 1):
+        try:
+            response = session.get("https://my.lazada.vn/pdp/review/getReviewList", headers=headers,
+                params=params, impersonate="chrome", timeout=REQUEST_TIMEOUT_SECONDS, allow_redirects=False)
+            validate_http_response(response)
+            return response, attempt
+        except RequestException as error:
+            failure = transport_error(error)
+        except ReviewPageError as error:
+            failure = error
+        failure.attempts = attempt
+        if not failure.retryable or attempt == MAX_REQUEST_ATTEMPTS or failure.retry_after > 30:
+            raise failure
+        logger.warning("Lazada retry product=%s stars=%s page=%s attempt=%s code=%s curl_code=%s http_status=%s",
+                       params["itemId"], params["filter"], params["pageNo"], attempt,
+                       failure.code, failure.curl_code, failure.http_status)
+        time.sleep(max(attempt, failure.retry_after))
 
 
 def crawler_settings():
@@ -82,6 +109,9 @@ def crawl_lazada_reviews(product_id: int, datapath: str, stars: tuple = (1, 2, 3
     retry_after = 0
     requires_verification = False
     product_name = None
+    failure_code = None
+    curl_code = upstream_status = None
+    request_attempts = 0
     with curl_requests.Session(cookies=cookie_jar) as session:
         for index, star in enumerate(stars):
             if index: time.sleep(random.uniform(10, 20))
@@ -90,31 +120,15 @@ def crawl_lazada_reviews(product_id: int, datapath: str, stars: tuple = (1, 2, 3
             while max_pages is None or page <= max_pages:
                 pages_attempted += 1
                 try:
-                    response = session.get("https://my.lazada.vn/pdp/review/getReviewList", headers=headers,
-                        params={"itemId": product_id, "pageSize": 5, "filter": star, "sort": 0, "pageNo": page},
-                        impersonate="chrome", timeout=15, allow_redirects=False)
-                    if response.status_code != 200:
-                        requires_verification = response.status_code in {401, 403, 429}
-                        try: retry_after = max(0, int(response.headers.get("Retry-After", 0)))
-                        except (ValueError, TypeError): pass
-                        failure = f"Lazada trả HTTP {response.status_code}; đã dừng tại {star} sao, trang {page}."
-                        break
+                    response, attempts = request_review_page(session, headers,
+                        {"itemId": product_id, "pageSize": 5, "filter": star, "sort": 0, "pageNo": page})
+                    request_attempts += attempts
                     try:
                         payload = response.json()
                     except ValueError:
-                        requires_verification = True
-                        failure = f"Lazada trả trang xác minh thay vì JSON tại {star} sao, trang {page}."
-                        break
-                    if not isinstance(payload, dict): raise ValueError()
-                    model = payload.get("model") or {}
-                    if not isinstance(model, dict): raise ValueError()
-                    data = model.get("items")
-                    if data is None:
-                        data = ((payload.get("data") or {}).get("module") or {}).get("reviews")
-                    if not isinstance(data, list) or any(not isinstance(row, dict) for row in data):
-                        requires_verification = True
-                        failure = f"Lazada chưa cung cấp danh sách review hợp lệ tại {star} sao, trang {page}."
-                        break
+                        raise ReviewPageError("verification_required", "Lazada trả trang xác minh thay vì JSON.",
+                                              requires_verification=True, http_status=200)
+                    data, name, total_pages = parse_review_page(payload)
                     pages_crawled += 1
                     if not data:
                         completed_stars.append(star)
@@ -127,8 +141,7 @@ def crawl_lazada_reviews(product_id: int, datapath: str, stars: tuple = (1, 2, 3
                         failure = f"Lazada lặp lại trang review tại {star} sao, trang {page}; chưa xác nhận đã lấy đủ."
                         break
                     signatures.add(signature)
-                    name = model.get("productName") or (model.get("item") or {}).get("itemTitle")
-                    if isinstance(name, str) and name.strip(): product_name = name.strip()[:500]
+                    if name: product_name = name
                     new_count = 0
                     for review in data:
                         content = review.get("reviewContent")
@@ -149,12 +162,26 @@ def crawl_lazada_reviews(product_id: int, datapath: str, stars: tuple = (1, 2, 3
                             "content": content, "thank_count": review.get("likeCount"),
                             "created_at": normalize_review_date(review.get("reviewTime") or review.get("boughtDate")), "customer_name": customer})
                     logger.info("Lazada product=%s stars=%s page=%s new_reviews=%s", product_id, star, page, new_count)
-                    total_pages = (model.get("paging") or {}).get("totalPages")
-                    if total_pages is not None and int(total_pages) > 0 and page >= int(total_pages):
+                    if total_pages is not None and page >= total_pages:
                         completed_stars.append(star)
                         break
-                except Exception:
-                    failure = f"Không đọc được review Lazada tại {star} sao, trang {page}; đã giữ dữ liệu lấy được."
+                except ReviewPageError as error:
+                    failure_code = error.code
+                    curl_code, upstream_status = error.curl_code, error.http_status
+                    requires_verification, retry_after = error.requires_verification, error.retry_after
+                    attempts = getattr(error, "attempts", 0)
+                    request_attempts += attempts
+                    failure = f"{error.message} Đã dừng tại {star} sao, trang {page}."
+                    if attempts > 1:
+                        failure += f" Đã thử {attempts} lần."
+                    break
+                except Exception as error:
+                    failure_code = "processing_error"
+                    failure = f"Lỗi xử lý phản hồi review Lazada tại {star} sao, trang {page}; xem mã processing_error trong log crawler."
+                    # Exception messages can contain request/cookie data. Log
+                    # only type and a fixed code, never raw exceptions/headers.
+                    logger.error("Lazada processing failure product=%s stars=%s page=%s error_type=%s code=%s",
+                                 product_id, star, page, type(error).__name__, failure_code)
                     break
                 page += 1
                 if max_pages is not None and page > max_pages:
@@ -168,10 +195,14 @@ def crawl_lazada_reviews(product_id: int, datapath: str, stars: tuple = (1, 2, 3
         "pages_attempted": pages_attempted, "pages_fetched": pages_crawled,
         "completed_stars": completed_stars, "incomplete_stars": [star for star in stars if star not in completed_stars],
         "stopped_at_star": star if failure else None, "stopped_at_page": page if failure else None,
-        "requires_verification": requires_verification, "retry_after_seconds": retry_after}
+        "requires_verification": requires_verification, "retry_after_seconds": retry_after,
+        "crawl_error_code": failure_code, "curl_error_code": curl_code,
+        "upstream_status": upstream_status, "request_attempts": request_attempts}
     if failure:
         logger.warning("Lazada crawl partial product=%s reviews=%s stopped_star=%s stopped_page=%s requires_verification=%s: %s",
                        product_id, len(reviews), star, page, requires_verification, failure)
+        logger.warning("Lazada diagnostics product=%s code=%s curl_code=%s http_status=%s request_attempts=%s",
+                       product_id, failure_code, curl_code, upstream_status, request_attempts)
     if not frame.empty and datapath:
         directory = Path(datapath); directory.mkdir(parents=True, exist_ok=True)
         # Atomic replacement keeps simultaneous same-product exports valid.
@@ -198,7 +229,8 @@ def crawl_product_reviews(url):
     metadata = frame.attrs["crawl"]
     if frame.empty and metadata["crawl_status"] == "PARTIAL":
         error = CrawlUpstreamError(metadata["crawl_error"] or "Chưa lấy được đánh giá Lazada.")
-        error.status_code = 429 if metadata["requires_verification"] else 502
+        error.status_code = 429 if metadata["requires_verification"] else 504 if metadata["crawl_error_code"] == "network_timeout" else 502
+        error.error_code = metadata["crawl_error_code"]
         error.retry_after_seconds = metadata["retry_after_seconds"]
         raise error
     return {**metadata, "platform": "lazada", "sku_id": sku_id, "crawl_source": "cookie_star_filter",

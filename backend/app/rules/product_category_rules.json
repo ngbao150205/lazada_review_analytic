@@ -1,0 +1,1010 @@
+{
+  "rule_version": "category_v2",
+  "categories": {
+    "FMCG": {
+      "label": "Thực phẩm và đồ uống",
+      "issue_group": "FMCG_BEAUTY_HEALTH",
+      "priority": 40,
+      "keywords": [
+        "sữa bột",
+        "sữa tươi",
+        "sữa đặc",
+        "sữa hạt",
+        "sữa chua",
+        "thực phẩm",
+        "đồ ăn",
+        "bánh",
+        "kẹo",
+        "nước uống",
+        "đồ uống",
+        "mì ăn liền",
+        "mì gói",
+        "ngũ cốc",
+        "cà phê",
+        "trà",
+        "dầu ăn",
+        "gia vị",
+        "nước mắm",
+        "nước tương",
+        "hạt điều",
+        "bột mì",
+        "gạo",
+        "yến mạch",
+        "chocolate",
+        "cacao",
+        "mật ong",
+        "nước ngọt",
+        "nước ép",
+        "bia"
+      ],
+      "aliases": [
+        "sữa",
+        "snack",
+        "coffee",
+        "tea"
+      ],
+      "exclude": [
+        "sữa rửa mặt",
+        "sữa tắm",
+        "sữa dưỡng",
+        "máy pha cà phê",
+        "máy xay cà phê",
+        "ấm trà",
+        "bộ ấm trà",
+        "bình sữa",
+        "túi trữ sữa"
+      ]
+    },
+    "COSMETIC": {
+      "label": "Mỹ phẩm và chăm sóc da",
+      "issue_group": "FMCG_BEAUTY_HEALTH",
+      "priority": 60,
+      "keywords": [
+        "mỹ phẩm",
+        "trang điểm",
+        "kem nền",
+        "che khuyết điểm",
+        "phấn phủ",
+        "phấn má",
+        "son môi",
+        "son dưỡng",
+        "son tint",
+        "mascara",
+        "kẻ mắt",
+        "tẩy trang",
+        "sữa rửa mặt",
+        "kem chống nắng",
+        "kem dưỡng",
+        "sữa dưỡng",
+        "serum",
+        "toner",
+        "mặt nạ dưỡng da",
+        "mặt nạ giấy",
+        "dưỡng da",
+        "tinh chất dưỡng",
+        "nước hoa",
+        "cọ trang điểm",
+        "bông tẩy trang"
+      ],
+      "aliases": [
+        "skincare",
+        "makeup",
+        "concealer",
+        "lipstick"
+      ],
+      "exclude": []
+    },
+    "PERSONAL_CARE": {
+      "label": "Chăm sóc cá nhân",
+      "issue_group": "FMCG_BEAUTY_HEALTH",
+      "priority": 40,
+      "keywords": [
+        "dầu gội",
+        "dầu xả",
+        "sữa tắm",
+        "xà phòng tắm",
+        "kem đánh răng",
+        "bàn chải đánh răng",
+        "nước súc miệng",
+        "lăn khử mùi",
+        "băng vệ sinh",
+        "dao cạo râu",
+        "máy cạo râu",
+        "tông đơ",
+        "máy sấy tóc",
+        "máy uốn tóc",
+        "máy duỗi tóc",
+        "máy rửa mặt",
+        "máy tăm nước",
+        "nước rửa tay",
+        "gel rửa tay",
+        "chăm sóc tóc",
+        "nhuộm tóc",
+        "dầu dưỡng tóc"
+      ],
+      "aliases": [],
+      "exclude": []
+    },
+    "HEALTH": {
+      "label": "Sức khỏe và thiết bị y tế",
+      "issue_group": "FMCG_BEAUTY_HEALTH",
+      "priority": 60,
+      "keywords": [
+        "thực phẩm chức năng",
+        "thực phẩm bổ sung",
+        "vitamin",
+        "omega 3",
+        "men vi sinh",
+        "collagen",
+        "khẩu trang y tế",
+        "máy đo huyết áp",
+        "máy đo đường huyết",
+        "nhiệt kế",
+        "que thử",
+        "băng gạc",
+        "thiết bị y tế",
+        "máy massage",
+        "máy mát xa",
+        "miếng dán giảm đau",
+        "dung dịch sát khuẩn",
+        "nước muối sinh lý"
+      ],
+      "aliases": [
+        "supplement",
+        "probiotic"
+      ],
+      "exclude": []
+    },
+    "BABY": {
+      "label": "Mẹ và bé",
+      "issue_group": "GENERAL",
+      "priority": 60,
+      "keywords": [
+        "bỉm",
+        "tã em bé",
+        "tã dán",
+        "tã quần",
+        "bình sữa",
+        "núm ti",
+        "núm vú",
+        "túi trữ sữa",
+        "máy hút sữa",
+        "máy hâm sữa",
+        "xe đẩy em bé",
+        "địu em bé",
+        "ghế ăn dặm",
+        "đồ ăn dặm",
+        "yếm ăn",
+        "cốc tập uống",
+        "cốc hút nước",
+        "cốc nước trẻ em",
+        "bình uống nước trẻ em",
+        "khăn sữa",
+        "chăn sơ sinh",
+        "nôi em bé"
+      ],
+      "aliases": [
+        "đồ sơ sinh",
+        "mẹ và bé"
+      ],
+      "exclude": []
+    },
+    "PHONE": {
+      "label": "Điện thoại",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 40,
+      "keywords": [
+        "điện thoại",
+        "smartphone"
+      ],
+      "aliases": [
+        "iphone",
+        "samsung galaxy",
+        "google pixel",
+        "oppo reno",
+        "redmi note",
+        "poco phone"
+      ],
+      "exclude": [
+        "ốp lưng",
+        "ốp điện thoại",
+        "bao da",
+        "cường lực",
+        "miếng dán",
+        "giá đỡ",
+        "dây đeo điện thoại",
+        "cáp sạc",
+        "củ sạc",
+        "pin dự phòng"
+      ],
+      "prefer_primary_type_over": [
+        "PHONE_ACCESSORIES"
+      ]
+    },
+    "PHONE_ACCESSORIES": {
+      "label": "Phụ kiện điện thoại",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 80,
+      "keywords": [
+        "ốp lưng",
+        "ốp điện thoại",
+        "bao da điện thoại",
+        "kính cường lực",
+        "miếng dán màn hình",
+        "giá đỡ điện thoại",
+        "dây đeo điện thoại",
+        "pin dự phòng",
+        "sạc dự phòng",
+        "củ sạc",
+        "cáp sạc",
+        "cáp lightning",
+        "cáp type c",
+        "cáp usb c",
+        "gậy selfie",
+        "gậy chụp ảnh"
+      ],
+      "aliases": [
+        "phone case",
+        "power bank",
+        "screen protector"
+      ],
+      "exclude": [
+        "sạc laptop",
+        "sạc cho laptop",
+        "bộ sạc laptop",
+        "bàn phím"
+      ]
+    },
+    "EARPHONE": {
+      "label": "Tai nghe",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 40,
+      "keywords": [
+        "tai nghe",
+        "earphone",
+        "earphones",
+        "earbuds",
+        "headphone",
+        "headphones",
+        "bluetooth headset"
+      ],
+      "aliases": [
+        "airpods",
+        "galaxy buds"
+      ],
+      "exclude": [
+        "hộp đựng tai nghe",
+        "bao tai nghe",
+        "túi đựng tai nghe",
+        "đệm tai nghe",
+        "cáp tai nghe"
+      ]
+    },
+    "COMPUTER": {
+      "label": "Máy tính và máy tính bảng",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 40,
+      "keywords": [
+        "máy tính xách tay",
+        "máy tính để bàn",
+        "máy tính bảng",
+        "laptop",
+        "tablet",
+        "pc gaming",
+        "mini pc"
+      ],
+      "aliases": [
+        "macbook",
+        "ipad",
+        "surface pro",
+        "imac"
+      ],
+      "exclude": [
+        "bàn phím",
+        "chuột máy tính",
+        "chuột không dây",
+        "chuột gaming",
+        "túi chống sốc",
+        "balo laptop",
+        "bộ sạc",
+        "sạc laptop",
+        "sạc cho laptop",
+        "ốp ipad",
+        "bao da ipad",
+        "giá đỡ laptop",
+        "miếng dán"
+      ],
+      "prefer_primary_type_over": [
+        "COMPUTER_ACCESSORIES"
+      ]
+    },
+    "COMPUTER_ACCESSORIES": {
+      "label": "Linh kiện và phụ kiện máy tính",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 80,
+      "keywords": [
+        "bàn phím",
+        "chuột máy tính",
+        "chuột không dây",
+        "chuột gaming",
+        "ổ cứng",
+        "thẻ nhớ",
+        "usb",
+        "bộ nhớ ram",
+        "card đồ họa",
+        "bo mạch chủ",
+        "nguồn máy tính",
+        "tản nhiệt",
+        "màn hình máy tính",
+        "sạc laptop",
+        "sạc cho laptop",
+        "balo laptop",
+        "túi chống sốc laptop",
+        "giá đỡ laptop",
+        "ốp ipad",
+        "bao da ipad",
+        "webcam",
+        "hub usb",
+        "cáp hdmi",
+        "hộp đựng tai nghe",
+        "bao tai nghe",
+        "túi đựng tai nghe",
+        "đệm tai nghe",
+        "cáp tai nghe"
+      ],
+      "aliases": [
+        "ssd",
+        "hdd",
+        "gpu",
+        "mainboard",
+        "keyboard",
+        "mouse"
+      ],
+      "exclude": []
+    },
+    "AUDIO_VIDEO": {
+      "label": "Âm thanh và hình ảnh",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 40,
+      "keywords": [
+        "loa bluetooth",
+        "loa kéo",
+        "loa vi tính",
+        "loa karaoke",
+        "loa soundbar",
+        "micro",
+        "mic karaoke",
+        "máy chiếu",
+        "tivi",
+        "ti vi",
+        "smart tv",
+        "đầu karaoke",
+        "amply",
+        "âm ly",
+        "đầu thu truyền hình",
+        "máy quay",
+        "máy ảnh",
+        "ống kính máy ảnh"
+      ],
+      "aliases": [
+        "speaker",
+        "television",
+        "camera"
+      ],
+      "exclude": [
+        "đồ chơi",
+        "mô hình"
+      ]
+    },
+    "SMART_HOME": {
+      "label": "Thiết bị nhà thông minh",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 70,
+      "keywords": [
+        "camera an ninh",
+        "camera giám sát",
+        "chuông cửa",
+        "khóa cửa thông minh",
+        "ổ cắm thông minh",
+        "công tắc thông minh",
+        "cảm biến cửa",
+        "cảm biến chuyển động",
+        "đèn thông minh",
+        "bộ phát wifi",
+        "router",
+        "modem",
+        "wifi mesh",
+        "bộ kích sóng"
+      ],
+      "aliases": [
+        "smart home"
+      ],
+      "exclude": []
+    },
+    "SMART_WEARABLE": {
+      "label": "Thiết bị đeo thông minh",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 80,
+      "keywords": [
+        "đồng hồ thông minh",
+        "vòng đeo thông minh",
+        "vòng tay thông minh",
+        "vòng đeo sức khỏe"
+      ],
+      "aliases": [
+        "smartwatch",
+        "smartband",
+        "apple watch",
+        "galaxy watch",
+        "mi band"
+      ],
+      "exclude": []
+    },
+    "HOME_APPLIANCES": {
+      "label": "Điện gia dụng",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 60,
+      "keywords": [
+        "nồi cơm điện",
+        "nồi chiên không dầu",
+        "bếp từ",
+        "bếp điện",
+        "bếp hồng ngoại",
+        "lò vi sóng",
+        "lò nướng",
+        "máy xay sinh tố",
+        "máy ép trái cây",
+        "máy pha cà phê",
+        "máy xay cà phê",
+        "ấm siêu tốc",
+        "bình đun siêu tốc",
+        "máy hút bụi",
+        "robot hút bụi",
+        "máy lọc không khí",
+        "máy lọc nước",
+        "máy giặt",
+        "tủ lạnh",
+        "máy lạnh",
+        "điều hòa",
+        "quạt điện",
+        "quạt trần",
+        "quạt đứng",
+        "quạt bàn",
+        "bàn ủi",
+        "bàn là",
+        "máy hút ẩm",
+        "máy tạo ẩm",
+        "máy rửa bát",
+        "máy rửa chén"
+      ],
+      "aliases": [
+        "air fryer",
+        "blender",
+        "vacuum"
+      ],
+      "exclude": []
+    },
+    "HOME_KITCHEN": {
+      "label": "Đồ dùng nhà bếp và gia đình",
+      "issue_group": "GENERAL",
+      "priority": 40,
+      "keywords": [
+        "nồi inox",
+        "nồi gang",
+        "chảo",
+        "bộ nồi",
+        "dao bếp",
+        "thớt",
+        "bát đĩa",
+        "chén đĩa",
+        "hộp đựng thực phẩm",
+        "bình giữ nhiệt",
+        "bình nước",
+        "ly thủy tinh",
+        "cốc sứ",
+        "cốc uống nước",
+        "bộ ấm trà",
+        "ấm trà",
+        "dụng cụ nhà bếp",
+        "kệ gia vị",
+        "thùng rác",
+        "móc treo",
+        "hộp đựng đồ",
+        "túi đựng rác",
+        "màng bọc thực phẩm",
+        "giấy bạc",
+        "đồng hồ treo tường",
+        "đèn bàn",
+        "đèn trang trí",
+        "đèn led",
+        "bóng đèn",
+        "đèn ngủ",
+        "đèn pin",
+        "lọ hoa",
+        "bình hoa"
+      ],
+      "aliases": [
+        "cookware",
+        "kitchenware"
+      ],
+      "exclude": []
+    },
+    "FURNITURE": {
+      "label": "Nội thất",
+      "issue_group": "GENERAL",
+      "priority": 40,
+      "keywords": [
+        "bàn làm việc",
+        "bàn học",
+        "bàn ăn",
+        "bàn trà",
+        "ghế văn phòng",
+        "ghế gaming",
+        "ghế ăn",
+        "ghế sofa",
+        "sofa",
+        "giường ngủ",
+        "tủ quần áo",
+        "tủ giày",
+        "kệ sách",
+        "kệ tivi",
+        "kệ để đồ",
+        "tủ đầu giường",
+        "bàn trang điểm",
+        "bàn gấp",
+        "ghế gấp"
+      ],
+      "aliases": [],
+      "exclude": [
+        "đồ chơi",
+        "mô hình"
+      ]
+    },
+    "HOME_TEXTILES": {
+      "label": "Chăn ga và đồ vải gia đình",
+      "issue_group": "GENERAL",
+      "priority": 60,
+      "keywords": [
+        "chăn ga",
+        "ga giường",
+        "drap",
+        "vỏ gối",
+        "ruột gối",
+        "gối ngủ",
+        "chăn bông",
+        "chăn mùa hè",
+        "nệm",
+        "đệm ngủ",
+        "rèm cửa",
+        "khăn tắm",
+        "khăn mặt",
+        "thảm trải sàn",
+        "thảm lau chân",
+        "khăn trải bàn"
+      ],
+      "aliases": [
+        "bedding",
+        "pillow",
+        "blanket"
+      ],
+      "exclude": []
+    },
+    "CLEANING": {
+      "label": "Vệ sinh và chăm sóc nhà cửa",
+      "issue_group": "GENERAL",
+      "priority": 40,
+      "keywords": [
+        "nước giặt",
+        "bột giặt",
+        "nước xả vải",
+        "viên giặt",
+        "nước rửa chén",
+        "nước rửa bát",
+        "nước lau sàn",
+        "nước tẩy bồn cầu",
+        "dung dịch tẩy rửa",
+        "cây lau nhà",
+        "chổi quét",
+        "bàn chải vệ sinh",
+        "miếng rửa chén",
+        "khăn lau nhà",
+        "túi thơm",
+        "sáp thơm",
+        "giấy vệ sinh",
+        "khăn giấy"
+      ],
+      "aliases": [],
+      "exclude": []
+    },
+    "TOOLS": {
+      "label": "Dụng cụ và thiết bị sửa chữa",
+      "issue_group": "ELECTRONICS_TECH",
+      "priority": 40,
+      "keywords": [
+        "máy khoan",
+        "máy vặn vít",
+        "máy bắt vít",
+        "máy siết bu lông",
+        "tua vít",
+        "tô vít",
+        "bộ vít",
+        "bộ dụng cụ",
+        "cờ lê",
+        "mỏ lết",
+        "kìm",
+        "búa",
+        "thước cuộn",
+        "máy cắt",
+        "máy mài",
+        "máy hàn",
+        "mũi khoan",
+        "đầu vít",
+        "súng bắn keo",
+        "súng phun sơn",
+        "keo dán",
+        "băng keo",
+        "ổ khóa",
+        "bản lề"
+      ],
+      "aliases": [
+        "drill",
+        "screwdriver"
+      ],
+      "exclude": [
+        "đồ chơi",
+        "mô hình",
+        "máy cắt tóc",
+        "máy cạo râu"
+      ]
+    },
+    "GARDEN": {
+      "label": "Sân vườn",
+      "issue_group": "GENERAL",
+      "priority": 70,
+      "keywords": [
+        "hạt giống",
+        "cây cảnh",
+        "chậu cây",
+        "đất trồng",
+        "phân bón",
+        "dụng cụ làm vườn",
+        "vòi tưới",
+        "bình tưới",
+        "máy cắt cỏ",
+        "kéo cắt cành",
+        "giàn trồng",
+        "lưới che nắng",
+        "thuốc trừ sâu",
+        "thuốc diệt côn trùng"
+      ],
+      "aliases": [],
+      "exclude": []
+    },
+    "CLOTHING": {
+      "label": "Quần áo",
+      "issue_group": "FASHION_ACCESSORIES",
+      "priority": 40,
+      "keywords": [
+        "áo",
+        "quần",
+        "váy",
+        "đầm",
+        "áo khoác",
+        "áo thun",
+        "áo sơ mi",
+        "quần jeans",
+        "quần short",
+        "đồ lót",
+        "đồ ngủ",
+        "áo thể thao",
+        "quần thể thao",
+        "quần áo",
+        "hoodie",
+        "sweater",
+        "cardigan",
+        "jacket",
+        "jeans",
+        "legging",
+        "shirt",
+        "tshirt"
+      ],
+      "aliases": [
+        "thời trang"
+      ],
+      "exclude": [
+        "tủ quần áo",
+        "móc treo quần áo",
+        "túi đựng quần áo",
+        "búp bê",
+        "đồ chơi"
+      ]
+    },
+    "SHOES": {
+      "label": "Giày dép",
+      "issue_group": "FASHION_ACCESSORIES",
+      "priority": 40,
+      "keywords": [
+        "giày",
+        "dép",
+        "sandal",
+        "sneaker",
+        "giày thể thao",
+        "giày cao gót",
+        "giày chạy bộ",
+        "dép lê",
+        "dép quai hậu",
+        "ủng",
+        "boots"
+      ],
+      "aliases": [
+        "footwear"
+      ],
+      "exclude": [
+        "tủ giày",
+        "kệ giày",
+        "hộp đựng giày",
+        "túi đựng giày",
+        "bàn chải giày"
+      ]
+    },
+    "BAGS_WALLETS": {
+      "label": "Túi xách và ví",
+      "issue_group": "FASHION_ACCESSORIES",
+      "priority": 40,
+      "keywords": [
+        "túi xách",
+        "túi đeo chéo",
+        "túi tote",
+        "túi du lịch",
+        "túi thể thao",
+        "ba lô",
+        "balo",
+        "cặp học sinh",
+        "ví da",
+        "ví nam",
+        "ví nữ",
+        "bóp da",
+        "vali",
+        "va li"
+      ],
+      "aliases": [
+        "handbag",
+        "backpack",
+        "wallet",
+        "luggage"
+      ],
+      "exclude": [
+        "balo laptop",
+        "túi đựng thực phẩm",
+        "túi đựng rác"
+      ]
+    },
+    "WATCHES": {
+      "label": "Đồng hồ",
+      "issue_group": "FASHION_ACCESSORIES",
+      "priority": 40,
+      "keywords": [
+        "đồng hồ đeo tay",
+        "đồng hồ nam",
+        "đồng hồ nữ",
+        "đồng hồ cơ",
+        "đồng hồ quartz",
+        "dây đồng hồ"
+      ],
+      "aliases": [
+        "watch"
+      ],
+      "exclude": [
+        "đồng hồ thông minh",
+        "đồng hồ đo",
+        "smartwatch",
+        "apple watch",
+        "galaxy watch"
+      ]
+    },
+    "JEWELRY": {
+      "label": "Trang sức và phụ kiện",
+      "issue_group": "FASHION_ACCESSORIES",
+      "priority": 40,
+      "keywords": [
+        "vòng tay",
+        "vòng cổ",
+        "dây chuyền",
+        "nhẫn",
+        "bông tai",
+        "hoa tai",
+        "khuyên tai",
+        "trang sức",
+        "lắc tay",
+        "lắc chân",
+        "kính mát",
+        "kính râm",
+        "thắt lưng",
+        "cài tóc",
+        "kẹp tóc",
+        "bracelet",
+        "necklace",
+        "ring",
+        "earring"
+      ],
+      "aliases": [],
+      "exclude": [
+        "vòng đeo thông minh",
+        "vòng tay thông minh",
+        "vòng đeo sức khỏe",
+        "kẹp tóc điện"
+      ]
+    },
+    "SPORTS": {
+      "label": "Thể thao và dã ngoại",
+      "issue_group": "GENERAL",
+      "priority": 40,
+      "keywords": [
+        "dụng cụ thể thao",
+        "vợt cầu lông",
+        "vợt tennis",
+        "vợt bóng bàn",
+        "quả bóng",
+        "bóng đá",
+        "bóng rổ",
+        "thảm yoga",
+        "dây nhảy",
+        "dây kháng lực",
+        "tạ tay",
+        "máy chạy bộ",
+        "xe đạp thể thao",
+        "lều cắm trại",
+        "túi ngủ",
+        "balo leo núi",
+        "cần câu",
+        "máy câu",
+        "kính bơi",
+        "đồ bơi"
+      ],
+      "aliases": [
+        "camping",
+        "fitness",
+        "yoga"
+      ],
+      "exclude": []
+    },
+    "AUTO_MOTO": {
+      "label": "Ô tô xe máy và phụ kiện",
+      "issue_group": "GENERAL",
+      "priority": 40,
+      "keywords": [
+        "phụ kiện ô tô",
+        "phụ kiện xe máy",
+        "ô tô",
+        "xe máy",
+        "mũ bảo hiểm",
+        "nhớt xe",
+        "dầu nhớt",
+        "lốp xe",
+        "vỏ xe",
+        "bình ắc quy",
+        "camera hành trình",
+        "bơm lốp",
+        "gạt mưa",
+        "thảm ô tô",
+        "bọc vô lăng",
+        "khóa xe"
+      ],
+      "aliases": [
+        "motorcycle",
+        "car accessories"
+      ],
+      "exclude": [
+        "đồ chơi",
+        "mô hình"
+      ]
+    },
+    "TOYS": {
+      "label": "Đồ chơi",
+      "issue_group": "GENERAL",
+      "priority": 70,
+      "keywords": [
+        "đồ chơi",
+        "búp bê",
+        "gấu bông",
+        "xe điều khiển",
+        "bộ xếp hình",
+        "đồ chơi lắp ráp",
+        "đất nặn",
+        "mô hình",
+        "lego",
+        "rubik",
+        "board game",
+        "đồ chơi giáo dục"
+      ],
+      "aliases": [
+        "toy",
+        "toys"
+      ],
+      "exclude": []
+    },
+    "BOOKS_STATIONERY": {
+      "label": "Sách và văn phòng phẩm",
+      "issue_group": "GENERAL",
+      "priority": 60,
+      "keywords": [
+        "sách",
+        "truyện",
+        "tiểu thuyết",
+        "giáo trình",
+        "vở học sinh",
+        "sổ tay",
+        "bút bi",
+        "bút chì",
+        "bút màu",
+        "bút máy",
+        "giấy in",
+        "văn phòng phẩm",
+        "bìa hồ sơ",
+        "băng xóa",
+        "mực in",
+        "máy in",
+        "máy tính cầm tay"
+      ],
+      "aliases": [
+        "book",
+        "notebook stationery"
+      ],
+      "exclude": [
+        "kệ sách",
+        "giá sách",
+        "tủ sách"
+      ]
+    },
+    "PET": {
+      "label": "Thú cưng",
+      "issue_group": "GENERAL",
+      "priority": 80,
+      "keywords": [
+        "thức ăn cho chó",
+        "thức ăn cho mèo",
+        "hạt cho chó",
+        "hạt cho mèo",
+        "pate mèo",
+        "pate chó",
+        "cát mèo",
+        "sữa tắm thú cưng",
+        "chuồng chó",
+        "chuồng mèo",
+        "lồng thú cưng",
+        "vòng cổ chó",
+        "vòng cổ mèo",
+        "đồ chơi thú cưng",
+        "đồ chơi cho mèo",
+        "dây dắt chó",
+        "phụ kiện thú cưng",
+        "thức ăn dành cho chó",
+        "thức ăn dành cho mèo",
+        "sữa tắm dành cho chó",
+        "sữa tắm dành cho mèo",
+        "sữa tắm cho chó",
+        "sữa tắm cho mèo",
+        "áo cho chó",
+        "áo cho mèo"
+      ],
+      "aliases": [
+        "pet food",
+        "cat food",
+        "dog food"
+      ],
+      "exclude": []
+    }
+  },
+  "legacy_issue_groups": {
+    "PACKAGING": "FASHION_ACCESSORIES"
+  },
+  "title_qualifiers": [
+    "tặng kèm",
+    "tặng",
+    "kèm",
+    "dành cho",
+    "tương thích với",
+    "compatible with",
+    "for"
+  ]
+}

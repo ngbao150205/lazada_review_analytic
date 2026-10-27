@@ -1,0 +1,10 @@
+{
+  "rule_version": "product_comparison_v1",
+  "min_reviews_per_product": 10,
+  "min_mentions_per_product": 5,
+  "min_polarity_reviews": 3,
+  "difference_percentage_points": 10,
+  "common_topics": ["packaging", "shipping", "support"],
+  "functional_topics": ["quality", "functionality", "durability", "battery", "sound", "fabric", "stitching", "sizing"],
+  "max_findings": 2
+}

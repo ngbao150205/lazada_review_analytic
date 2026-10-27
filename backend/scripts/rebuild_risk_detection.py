@@ -68,9 +68,6 @@ def rebuild_risk_detection(
 
         processed = 0
         risk_true = 0
-        risk_high = 0
-        risk_medium = 0
-        risk_low = 0
 
         offset = 0
 
@@ -115,13 +112,6 @@ def rebuild_risk_detection(
                 if risk.risk_flag:
                     risk_true += 1
 
-                if risk.risk_level == "HIGH":
-                    risk_high += 1
-                elif risk.risk_level == "MEDIUM":
-                    risk_medium += 1
-                elif risk.risk_level == "LOW":
-                    risk_low += 1
-
             db.commit()
 
             offset += batch_size
@@ -134,9 +124,7 @@ def rebuild_risk_detection(
         print("DONE")
         print(f"Processed reviews: {processed}")
         print(f"Risk flag TRUE: {risk_true}")
-        print(f"HIGH: {risk_high}")
-        print(f"MEDIUM: {risk_medium}")
-        print(f"LOW: {risk_low}")
+        print(f"No fraud/counterfeit keyword alert: {processed - risk_true}")
         print("=" * 60)
 
     except Exception as error:

@@ -1,53 +1,16 @@
 {
-  "critical_issue_keywords": [
-  "hàng fake",
-  "hàng giả",
-  "hàng nhái",
-  "không chính hãng",
-  "không phải hàng chính hãng",
-  "sản phẩm giả",
-  "giả mạo",
-  "hết hạn",
-  "quá hạn",
-  "dị ứng",
-  "kích ứng",
-  "ngộ độc",
-  "không dùng được",
-  "không sử dụng được",
-  "lừa đảo",
-  "treo đầu dê bán thịt chó"
-],
-
-"generic_fallback_markers": [
-  "sản phẩm",
-  "hàng",
-  "sp",
-  "chất lượng",
-  "giao",
-  "giao hàng",
-  "ship",
-  "vận chuyển",
-  "đơn hàng",
-  "nhận hàng",
-  "kho",
-  "shop",
-  "hỗ trợ",
-  "phản hồi",
-  "giá",
-  "phí",
-  "sale",
-  "khuyến mãi",
-  "giảm giá",
-  "voucher",
-  "mã giảm",
-  "thuế",
-  "thanh toán",
-  "rẻ",
-  "mắc",
-  "đắt",
-  "tiền"
-],
-
+  "rule_version": "issue_camera_context_v8",
+  "scoring": {
+    "threshold": 3,
+    "aggregation": "max_rule_weight"
+  },
+  "review_policy": {
+    "low_rating_max": 2,
+    "high_rating_min": 4,
+    "request_on_sentiments": [
+      "Negative"
+    ]
+  },
   "abbreviations": {
     "ko": "không",
     "k": "không",
@@ -60,9 +23,14 @@
     "xài": "sử dụng",
     "xạc": "sạc",
     "ship": "giao hàng",
-    "shop": "shop"
+    "shop": "shop",
+    "box": "hộp",
+    "đc": "được",
+    "lun": "luôn",
+    "bth": "bình thường",
+    "ko kỉ": "không kỹ",
+    "không kỉ": "không kỹ"
   },
-
   "negation_words": [
     "không",
     "ko",
@@ -70,9 +38,10 @@
     "kh",
     "chưa",
     "chẳng",
-    "chả"
+    "chả",
+    "hông",
+    "khong"
   ],
-
   "positive_phrases": [
     "nguyên vẹn",
     "đầy đủ",
@@ -101,511 +70,1288 @@
     "shop hỗ trợ tốt",
     "shop phản hồi nhanh"
   ],
-
-  "negative_markers": [
-    "tệ",
-    "kém",
-    "lỗi",
-    "hỏng",
-    "hư",
-    "thất vọng",
-    "bực",
-    "khó chịu",
-    "không hài lòng",
-    "không đáng tiền",
-    "quá tệ",
-    "rất tệ",
-    "chán",
-    "không ổn",
-    "không tốt"
+  "platform_policy_patterns": [
+    "đừng buộc khách hàng phải có hình ảnh sản phẩm",
+    "buộc khách hàng phải có hình ảnh sản phẩm",
+    "bắt khách hàng phải có hình ảnh sản phẩm",
+    "phải có hình ảnh sản phẩm",
+    "bắt buộc thêm hình ảnh",
+    "bắt phải thêm hình ảnh",
+    "không muốn thêm hình ảnh"
   ],
-
-  "fallback_markers": {
-  "PRODUCT_QUALITY": [
-    "chất lượng tệ",
-    "chất lượng kém",
-    "chất lượng không tốt",
-    "không tốt",
-    "không ổn",
-    "bị lỗi",
-    "hỏng",
-    "bị hỏng",
-    "bị hư",
-    "không dùng được",
-    "không sử dụng được",
-    "thất vọng",
-    "chán",
-    "pin yếu",
-    "pin tụt",
-    "tụt pin",
-    "hết pin nhanh",
-    "pin nhanh hết",
-    "chai pin",
-    "thời lượng pin kém",
-    "thời lượng pin yếu"
+  "evidence_rules": [
+    {
+      "id": "general.product_quality.strong",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "bong tróc",
+        "bể vỡ",
+        "bị bể",
+        "bị hư",
+        "bị hỏng",
+        "bị lỗi",
+        "bị móp",
+        "bị trầy",
+        "bị vỡ",
+        "bị xước",
+        "giả mạo",
+        "hàng fake",
+        "hàng giả",
+        "hàng lỗi",
+        "hàng nhái",
+        "hư hỏng",
+        "hỏng",
+        "không chính hãng",
+        "không dùng được",
+        "không phải hàng chính hãng",
+        "không sử dụng được",
+        "lỗi kỹ thuật",
+        "móp méo",
+        "mới dùng đã hỏng",
+        "mới dùng đã lỗi",
+        "nhanh hỏng",
+        "nứt",
+        "rách",
+        "sản phẩm giả",
+        "sản phẩm lỗi",
+        "thiếu phụ kiện",
+        "trầy xước"
+      ]
+    },
+    {
+      "id": "general.product_quality.moderate",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "chất lượng không tốt",
+        "chất lượng không ổn",
+        "chất lượng kém",
+        "chất lượng rất tệ",
+        "chất lượng tệ",
+        "hàng không đúng",
+        "khác hình",
+        "khác mô tả",
+        "không bền",
+        "không giống hình",
+        "không giống mô tả",
+        "không như livestream",
+        "không như quảng cáo",
+        "không đúng màu",
+        "không đúng mẫu",
+        "không đúng size",
+        "kém chất lượng",
+        "mô tả sai",
+        "sai mô tả",
+        "sản phẩm kém",
+        "sản phẩm tệ",
+        "treo đầu dê bán thịt chó",
+        "ảnh một đằng hàng một nẻo"
+      ]
+    },
+    {
+      "id": "general.product_quality.generic_criticism",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "excluded_aspects": [
+        "SHIPPING",
+        "PACKAGING",
+        "SUPPORT",
+        "VALUE"
+      ],
+      "reason": "Lời chê chung về sản phẩm như tệ hoặc dở; không áp dụng khi đoạn đang nói về vận chuyển, đóng gói, dịch vụ hay giá.",
+      "keywords": [
+        "tệ",
+        "dở",
+        "dởm",
+        "dỏm",
+        "rởm",
+        "đồ bỏ đi",
+        "nùi giẻ",
+        "bùi nhùi"
+      ],
+      "negation_subjects": [
+        "hàng",
+        "sản phẩm",
+        "đồ"
+      ]
+    },
+    {
+      "id": "general.product_quality.weak",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "weak",
+      "weight": 1,
+      "requires_negative_context": false,
+      "reason": "Nhận xét chung hoặc tín hiệu mơ hồ, chưa đủ để tự kết luận có vấn đề.",
+      "keywords": [
+        "chán",
+        "chán với sản phẩm",
+        "dùng được vài ngày",
+        "hàng không ổn lắm",
+        "không tốt",
+        "không ổn",
+        "sử dụng được vài ngày",
+        "thất vọng",
+        "thất vọng với sản phẩm"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.strong",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "bị tráo hàng",
+        "chưa nhận được hàng",
+        "giao nhầm",
+        "giao nhầm hàng",
+        "giao nhầm sản phẩm",
+        "giao sai",
+        "giao sai hàng",
+        "giao sai sản phẩm",
+        "giao thiếu",
+        "giao thiếu hàng",
+        "hàng bị đổi ruột",
+        "hộp rỗng",
+        "không nhận được hàng",
+        "mất hàng",
+        "nhận hộp rỗng",
+        "sai sản phẩm",
+        "shipper làm mất",
+        "thiếu hàng",
+        "thất lạc",
+        "tráo hàng",
+        "tráo ruột"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.moderate",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "giao chậm",
+        "giao hàng chậm",
+        "giao hàng lâu",
+        "giao lâu",
+        "giao trễ",
+        "kẹt kho",
+        "ngâm kho",
+        "phí giao hàng cao",
+        "phí ship cao",
+        "phí vận chuyển cao",
+        "phí vận chuyển đắt",
+        "quá lâu mới nhận được",
+        "ship cao",
+        "ship chậm",
+        "ship lâu",
+        "ship mắc",
+        "tiền ship cao",
+        "trễ hẹn",
+        "vận chuyển chậm",
+        "đơn bị ngâm",
+        "đợi hàng lâu",
+        "đợi lâu",
+        "giao hàng tệ",
+        "giao hàng rất tệ",
+        "vận chuyển tệ",
+        "đóng gói tệ",
+        "đóng gói rất tệ"
+      ]
+    },
+    {
+      "id": "general.customer_service_returns.strong",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "bảo hành không được",
+        "không bảo hành",
+        "không cho trả hàng",
+        "không cho đổi trả",
+        "không chấp nhận đổi trả",
+        "không giải quyết",
+        "không hoàn tiền",
+        "không hỗ trợ",
+        "không hỗ trợ bảo hành",
+        "không trả lời tin nhắn",
+        "không xử lý",
+        "không được hoàn tiền",
+        "nhắn không trả lời",
+        "shop không hỗ trợ",
+        "shop không phản hồi",
+        "shop không xử lý",
+        "từ chối bảo hành",
+        "từ chối giải quyết"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.customer_service_returns.moderate",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bảo hành khó",
+        "bảo hành lâu",
+        "chăm sóc khách hàng kém",
+        "chờ hoàn tiền lâu",
+        "dịch vụ kém",
+        "hoàn tiền khó",
+        "hỗ trợ kém",
+        "khiếu nại lâu",
+        "không phản hồi",
+        "phản hồi chậm",
+        "quy trình đổi trả phức tạp",
+        "shop phản hồi chậm",
+        "thái độ kém",
+        "thủ tục rườm rà",
+        "trả hàng khó",
+        "xử lý khiếu nại lâu",
+        "đùn đẩy trách nhiệm",
+        "đổi trả khó",
+        "dịch vụ tệ",
+        "dịch vụ rất tệ",
+        "hỗ trợ tệ",
+        "hỗ trợ rất tệ",
+        "chăm sóc khách hàng tệ"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.customer_service_returns.weak",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "weak",
+      "weight": 1,
+      "requires_negative_context": false,
+      "reason": "Nhận xét chung hoặc tín hiệu mơ hồ, chưa đủ để tự kết luận có vấn đề.",
+      "keywords": [
+        "hoàn tiền",
+        "khiếu nại",
+        "refund",
+        "return",
+        "trả hàng",
+        "đổi hàng"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.strong",
+      "issue_type": "PRICING_PROMOTIONS",
+      "label": "Giá cả và khuyến mãi",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "chi phí ẩn",
+        "giá gốc ảo",
+        "giá hiển thị khác",
+        "giá lúc thanh toán cao hơn",
+        "giảm giá ảo",
+        "khuyến mãi ảo",
+        "nâng giá rồi giảm",
+        "phát sinh phí",
+        "phí ẩn",
+        "sale ảo",
+        "thanh toán cao hơn",
+        "thêm phí",
+        "tính thêm phí",
+        "tăng giá rồi giảm"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.moderate",
+      "issue_type": "PRICING_PROMOTIONS",
+      "label": "Giá cả và khuyến mãi",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "giá cao",
+        "giá cao so với chất lượng",
+        "giá mắc",
+        "giá quá cao",
+        "giá đắt",
+        "giảm giá nhưng vẫn đắt",
+        "không dùng được mã",
+        "không nhận được khuyến mãi",
+        "không rẻ hơn ngày thường",
+        "không áp được mã",
+        "không đáng tiền",
+        "không đúng khuyến mãi",
+        "mắc so với chất lượng",
+        "phí tiền",
+        "uổng tiền",
+        "đắt so với chất lượng"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.weak",
+      "issue_type": "PRICING_PROMOTIONS",
+      "label": "Giá cả và khuyến mãi",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "weak",
+      "weight": 1,
+      "requires_negative_context": false,
+      "reason": "Nhận xét chung hoặc tín hiệu mơ hồ, chưa đủ để tự kết luận có vấn đề.",
+      "keywords": [
+        "cạnh tranh phá giá",
+        "giá hỗn loạn",
+        "giá không rẻ",
+        "giá quá rẻ bất thường",
+        "phá giá",
+        "phí dịch vụ",
+        "phí nền tảng",
+        "thuế phát sinh",
+        "xả hàng giá rẻ"
+      ]
+    },
+    {
+      "id": "fmcg_beauty_health.product_quality.strong",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "FMCG_BEAUTY_HEALTH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "buồn nôn",
+        "bị rò rỉ",
+        "bị vỡ chai",
+        "dị ứng",
+        "hết hạn",
+        "kem fake",
+        "kích ứng",
+        "mỹ phẩm fake",
+        "ngộ độc",
+        "ngứa",
+        "nắp bị bung",
+        "nổi mẩn",
+        "quá hạn",
+        "son fake",
+        "tiêu chảy",
+        "đau bụng"
+      ]
+    },
+    {
+      "id": "fmcg_beauty_health.product_quality.moderate",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "FMCG_BEAUTY_HEALTH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bị chảy",
+        "bị đổ",
+        "cận date",
+        "date ngắn",
+        "gần hết hạn",
+        "không rõ hạn sử dụng",
+        "không rõ nguồn gốc",
+        "mùi hôi",
+        "mùi khó chịu",
+        "mùi lạ"
+      ]
+    },
+    {
+      "id": "fmcg_beauty_health.shipping_logistics.moderate",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "FMCG_BEAUTY_HEALTH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bao bì bị rách",
+        "chai bị vỡ",
+        "chảy ra ngoài",
+        "hàng bị chảy khi giao",
+        "hàng bị móp",
+        "hàng bị đè",
+        "lọ bị vỡ",
+        "đổ ra ngoài"
+      ]
+    },
+    {
+      "id": "fmcg_beauty_health.customer_service_returns.moderate",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "FMCG_BEAUTY_HEALTH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "không cho đổi sản phẩm hết hạn",
+        "không hoàn tiền sản phẩm lỗi",
+        "không hỗ trợ đổi hàng",
+        "shop không xử lý hàng hết hạn"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "electronics_tech.product_quality.strong",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "cảm ứng lỗi",
+        "dùng không được",
+        "không lên nguồn",
+        "không nghe được",
+        "không sạc được",
+        "loa rè",
+        "màn hình lỗi",
+        "màn hình sọc",
+        "máy hỏng",
+        "máy không hoạt động",
+        "mất kết nối",
+        "mất tiếng",
+        "pin bị phồng",
+        "pin phồng",
+        "rò điện",
+        "sạc không vào",
+        "âm thanh rè"
+      ]
+    },
+    {
+      "id": "electronics_tech.product_quality.moderate",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bluetooth chập chờn",
+        "chai pin",
+        "dễ hỏng",
+        "dễ đứt",
+        "hết pin nhanh",
+        "hết pin quá nhanh",
+        "không chạy được lâu",
+        "không dùng được lâu",
+        "kết nối chập chờn",
+        "máy nóng",
+        "pin hết nhanh",
+        "pin nhanh hết",
+        "pin tụt",
+        "pin tụt nhanh",
+        "pin yếu",
+        "sạc nhanh đầy nhưng hết pin nhanh",
+        "sạc nhanh đầy nhưng không chạy được lâu",
+        "sử dụng không được lâu",
+        "thời lượng pin kém",
+        "thời lượng pin yếu",
+        "tụt pin",
+        "tụt pin nhanh",
+        "âm thanh kém"
+      ]
+    },
+    {
+      "id": "electronics_tech.product_quality.weak",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "weak",
+      "weight": 1,
+      "requires_negative_context": false,
+      "reason": "Nhận xét chung hoặc tín hiệu mơ hồ, chưa đủ để tự kết luận có vấn đề.",
+      "keywords": [
+        "dây mỏng",
+        "dây mỏng manh",
+        "âm thanh tầm thường"
+      ]
+    },
+    {
+      "id": "electronics_tech.shipping_logistics.strong",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "hộp rỗng",
+        "tráo hàng"
+      ]
+    },
+    {
+      "id": "electronics_tech.shipping_logistics.moderate",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bị tráo máy",
+        "hàng bị va đập",
+        "hộp móp méo",
+        "mất phụ kiện",
+        "thiếu cáp",
+        "thiếu sạc",
+        "thiếu tai nghe"
+      ]
+    },
+    {
+      "id": "electronics_tech.customer_service_returns.strong",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "không bảo hành",
+        "không hỗ trợ bảo hành",
+        "từ chối bảo hành"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "electronics_tech.customer_service_returns.moderate",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bảo hành khó",
+        "bảo hành kém",
+        "bảo hành lâu",
+        "không cho trả máy",
+        "không cho đổi máy",
+        "đổi trả máy khó"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.strong",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Mô tả lỗi hoặc sự cố cụ thể đã xảy ra.",
+      "keywords": [
+        "bung chỉ",
+        "bạc màu",
+        "bị gỉ",
+        "bị xỉn màu",
+        "gãy móc",
+        "hỏng khóa",
+        "lem màu",
+        "phai màu",
+        "rách chỉ",
+        "rơi đá",
+        "rụng đá",
+        "đường may lỗi"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.moderate",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bị bó",
+        "chất liệu kém",
+        "chất vải xấu",
+        "form không đẹp",
+        "form xấu",
+        "khác màu hình",
+        "khác ảnh",
+        "không giống ảnh",
+        "không vừa",
+        "không đúng màu",
+        "không đúng size",
+        "màu khác",
+        "màu ngoài khác ảnh",
+        "mẫu không giống hình",
+        "sai màu",
+        "sai size",
+        "vải xấu",
+        "xi mạ kém"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.weak",
+      "issue_type": "PRODUCT_QUALITY",
+      "label": "Chất lượng sản phẩm",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "weak",
+      "weight": 1,
+      "requires_negative_context": false,
+      "reason": "Nhận xét chung hoặc tín hiệu mơ hồ, chưa đủ để tự kết luận có vấn đề.",
+      "keywords": [
+        "bị đen",
+        "chật",
+        "hơi bó",
+        "hơi nhỏ",
+        "hơi rộng",
+        "rộng",
+        "size lớn",
+        "size nhỏ",
+        "chất liệu mỏng",
+        "vải mỏng",
+        "không có lớp lót"
+      ]
+    },
+    {
+      "id": "fashion_accessories.shipping_logistics.moderate",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "label": "Giao hàng và vận chuyển",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "bao bì rách",
+        "giao nhầm màu",
+        "giao sai màu",
+        "giao sai mẫu",
+        "giao sai size",
+        "hộp bị móp",
+        "thiếu món",
+        "thiếu phụ kiện",
+        "đóng gói sơ sài"
+      ]
+    },
+    {
+      "id": "fashion_accessories.customer_service_returns.moderate",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "label": "Dịch vụ khách hàng và đổi trả",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn trực tiếp về một thuộc tính hoặc dịch vụ cụ thể.",
+      "keywords": [
+        "không cho đổi màu",
+        "không cho đổi mẫu",
+        "không cho đổi size",
+        "không nhận đổi trả phụ kiện",
+        "không nhận đổi trả quần áo",
+        "shop không hỗ trợ đổi size",
+        "đổi size khó"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.product_quality.visual_mismatch",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Sản phẩm thực nhận không giống hình ảnh, mô tả hoặc quảng cáo; hỗ trợ cách diễn đạt có từ nối.",
+      "keywords": [
+        "không giống như ảnh",
+        "không giống trong ảnh",
+        "không giống như hình"
+      ],
+      "patterns": [
+        "không\\s+(?:hề\\s+)?(?:giống|đúng|khớp)\\s+(?:(?:như|với|trong|trên)\\s+){0,3}(?:hình(?:\\s+ảnh)?|ảnh|mô\\s+tả|quảng\\s+cáo)"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.excessive_thinness",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn vải hoặc trang phục mỏng quá mức, mỏng te hoặc nhàu/nhũn; không coi mọi mô tả mỏng là lỗi.",
+      "keywords": [
+        "quá mỏng",
+        "mỏng quá",
+        "mỏng te",
+        "mỏng tang",
+        "mỏng dính",
+        "nhũn nhoét"
+      ],
+      "patterns": [
+        "(?:quá|rất)\\s+mỏng",
+        "mỏng\\s+(?:quá|te|tang|dính|(?:đến|tới)\\s+mức|như\\s+tờ\\s+giấy)",
+        "(?:vải|quần|áo|chất\\s+liệu|chất\\s+vải)(?:\\s+(?:nhung|jean|kaki|cotton|vải|nỉ|lụa)){0,2}\\s+(?:hơi\\s+)?(?:nhàu(?:\\s+(?:nhĩ|nhỉ|nát))?|nhũn\\s+nhoét)"
+      ],
+      "negation_subjects": [
+        "vải",
+        "quần",
+        "áo",
+        "chất liệu",
+        "chất liệu vải",
+        "vải nhung",
+        "vải jean",
+        "vải kaki",
+        "chất vải"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.sewing_defect",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn đường may hoặc đường chỉ không đẹp, lệch, không đều hay may ẩu.",
+      "keywords": [
+        "đường may không đẹp",
+        "đường may ẹo",
+        "đường may xấu",
+        "đường may không đứng",
+        "may ẩu",
+        "may lệch",
+        "đường chỉ không đều"
+      ],
+      "patterns": [
+        "(?:đường\\s+(?:may|chỉ)|chỉ\\s+may)\\s*:?\\s*(?:(?:rất|quá|hơi|bị|còn)\\s+){0,2}(?:không\\s+(?:đẹp|đều|thẳng|chắc(?:\\s+chắn)?|đứng)|xấu|ẩu|lệch|ẹo|méo|cẩu\\s+thả)"
+      ]
+    },
+    {
+      "id": "fashion_accessories.product_quality.inaccurate_size",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "FASHION_ACCESSORIES"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phản ánh size hoặc kích cỡ không chính xác, không đúng/chuẩn/khớp.",
+      "keywords": [
+        "size không chính xác",
+        "size không chuẩn",
+        "kích cỡ không chính xác",
+        "kích thước không chuẩn"
+      ],
+      "patterns": [
+        "(?:size|bảng\\s+size|kích\\s+cỡ|kích\\s+thước)\\s*:?\\s*(?:không|chẳng)\\s+(?:được\\s+)?(?:chính\\s+xác|chuẩn|đúng|khớp)"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.contextual_delay",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Lời chê thời gian chờ lâu trong chính khía cạnh giao hàng; thời lượng đơn thuần chưa đủ để kết luận.",
+      "keywords": [
+        "giao hàng khá lâu",
+        "giao hàng rất lâu",
+        "giao hàng siêu lâu",
+        "vận chuyển khá lâu",
+        "vận chuyển rất lâu"
+      ],
+      "patterns": [
+        "^(?:khá|quá|rất|siêu)\\s+lâu(?:\\s+(?:thật|đấy|rồi|so\\s+với\\s+dự\\s+kiến|so\\s+với\\s+hẹn))?$",
+        "(?:giao\\s+hàng|vận\\s+chuyển|nhận\\s+hàng)(?:\\s+(?:khoảng|mất|tầm|hết|gần|hơn|hai|ba|một|ngày|tuần|\\d+)){0,6}\\s+(?:khá|quá|rất|siêu)\\s+lâu"
+      ],
+      "required_aspects": [
+        "SHIPPING"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.packaging_damage",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Hộp/bao bì bị móp, bẹp, rách hoặc vỡ khi nhận hàng.",
+      "keywords": [
+        "hộp móp",
+        "hộp bị móp",
+        "hộp móp méo",
+        "bao bì rách"
+      ],
+      "patterns": [
+        "(?:hộp|bao\\s+bì|thùng)(?:\\s+(?:bên|ngoài|trong|giấy|carton|của|gương)){0,4}\\s+(?:(?:bị|đã|thì)\\s+)?(?:móp(?:\\s+méo)?|bẹp|rách|nát)",
+        "(?:hộp|bao\\s+bì|thùng)(?:\\s+(?:giấy|carton|bên\\s+ngoài)){0,2}\\s+(?:bị\\s+)?(?:bể|vỡ)"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.inadequate_packing",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Khách phản ánh gói hàng sơ sài hoặc không kỹ, kể cả các cách viết tắt/sai chính tả thông dụng.",
+      "keywords": [
+        "đóng gói sơ sài",
+        "gói sơ sài",
+        "gói hàng sơ sài",
+        "đóng gói không kỹ",
+        "gói hàng không kỹ",
+        "gói không kỹ",
+        "đóng hàng không chắc chắn",
+        "đóng gói không chắc chắn"
+      ],
+      "patterns": [
+        "(?:đóng\\s+gói|gói(?:\\s+hàng)?)\\s+(?:(?:rất|quá|hơi)\\s+)?(?:sơ\\s+sài|không\\s+(?:kỹ|cẩn\\s+thận))",
+        "(?:đóng\\s+(?:gói|hàng)|gói(?:\\s+hàng)?)\\s+(?:(?:rất|quá|hơi)\\s+)?không\\s+chắc\\s+chắn"
+      ],
+      "negation_subjects": [
+        "đóng"
+      ]
+    },
+    {
+      "id": "fmcg_beauty_health.product_quality.broken_cosmetics",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "FMCG_BEAUTY_HEALTH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Quan sát mỹ phẩm/phấn mắt/nhũ/gương bị bể vỡ; không cần có từ bị trước động từ.",
+      "keywords": [
+        "bể nhũ",
+        "vỡ nhũ",
+        "phấn mắt vỡ",
+        "phấn mắt bể",
+        "vỡ luôn",
+        "bể luôn"
+      ],
+      "patterns": [
+        "(?:bể|vỡ)\\s+(?:\\d+\\s+)?(?:ô\\s+)?(?:nhũ|phấn(?:\\s+mắt)?|bảng\\s+(?:phấn|nhũ|mắt)|gương)",
+        "(?:phấn\\s+mắt|ô\\s+nhũ|bảng\\s+(?:phấn|nhũ|mắt)|gương)\\s+(?:(?:bị|đã|lại|vẫn)\\s+)?(?:bể|vỡ)"
+      ],
+      "negation_subjects": [
+        "nhận về",
+        "giao hàng về"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.received_damaged",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Khách nói rõ sản phẩm bể/vỡ lúc giao/nhận hàng; phản ánh tình trạng hàng đến tay, không khẳng định nguyên nhân do bên vận chuyển.",
+      "keywords": [
+        "giao hàng về bị vỡ",
+        "giao tới bị bể"
+      ],
+      "patterns": [
+        "(?:giao\\s+hàng|giao|nhận|mở\\s+hàng)(?:\\s+(?:về|tới|đến|ra|hàng|được)){0,3}\\s+(?:(?:phấn\\s+mắt|bảng\\s+(?:phấn|nhũ|mắt)|hàng|sản\\s+phẩm|gương|chai|lọ)\\s+)?(?:bị\\s+)?(?:bể|vỡ)"
+      ]
+    },
+    {
+      "id": "general.customer_service_returns.denied_request",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Yêu cầu đổi trả/hoàn tiền/bảo hành bị từ chối hoặc không được đồng ý.",
+      "keywords": [
+        "đổi trả không đồng ý",
+        "đổi trả không được duyệt",
+        "không đồng ý đổi trả",
+        "không đồng ý trả hàng",
+        "không chấp nhận trả hàng"
+      ],
+      "patterns": [
+        "(?:đổi\\s+trả|trả\\s+hàng|hoàn\\s+tiền|bảo\\s+hành)\\s+(?:shop\\s+)?không\\s+(?:đồng\\s+ý|được\\s+duyệt|được\\s+chấp\\s+nhận|chấp\\s+nhận|giải\\s+quyết)"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.customer_service_returns.insurance_denied",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Có ngữ cảnh bảo hiểm/bồi thường và phản ánh yêu cầu không được duyệt.",
+      "keywords": [
+        "không được duyệt",
+        "không duyệt",
+        "từ chối bồi thường"
+      ],
+      "required_context_patterns": [
+        "bảo\\s+hiểm",
+        "bồi\\s+thường"
+      ],
+      "context_scope": "same_or_previous_idea",
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.missing_gift",
+      "issue_type": "PRICING_PROMOTIONS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Không nhận được quà tặng/khuyến mãi đã mong đợi.",
+      "keywords": [
+        "thiếu quà tặng",
+        "không nhận được quà tặng",
+        "không tặng như quảng cáo"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.promised_brush_missing",
+      "issue_type": "PRICING_PROMOTIONS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Hình/quảng cáo hứa tặng cọ nhưng khách phản ánh không thấy/không có cọ; cần bằng chứng lời hứa ở cùng đoạn hoặc đoạn ngay trước.",
+      "keywords": [
+        "cọ không thấy",
+        "không thấy cọ",
+        "cọ không có",
+        "không có cọ"
+      ],
+      "required_context_patterns": [
+        "(?:hình(?:\\s+ảnh)?|ảnh|quảng\\s+cáo|mô\\s+tả)(?:\\s+(?:để|ghi|nói|có|sẽ)){0,3}\\s+tặng\\s+(?:cây\\s+)?cọ",
+        "(?:hứa|cam\\s+kết)\\s+tặng\\s+(?:cây\\s+)?cọ"
+      ],
+      "context_scope": "same_or_previous_idea"
+    },
+    {
+      "id": "general.customer_service_returns.unresolved_complaint",
+      "issue_type": "CUSTOMER_SERVICE_RETURNS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phản ánh trực tiếp người bán không giải quyết, xử lý hoặc phản hồi yêu cầu; lời dẫn vẫn được loại theo ngữ cảnh.",
+      "keywords": [
+        "shop không giải quyết",
+        "shop không xử lý",
+        "shop không hỗ trợ",
+        "shop không phản hồi"
+      ],
+      "patterns": [
+        "(?:shop|người\\s+bán|bên\\s+bán)\\s+(?:(?:vẫn|lại)\\s+)?không\\s+(?:giải\\s+quyết|xử\\s+lý|hỗ\\s+trợ|phản\\s+hồi)"
+      ],
+      "negation_subjects": [
+        "shop",
+        "người bán",
+        "bên bán"
+      ]
+    },
+    {
+      "id": "general.pricing_promotions.promised_gift_missing",
+      "issue_type": "PRICING_PROMOTIONS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Không có/không nhận được quà khi giao hàng, kèm bằng chứng được hứa tặng ở cùng đoạn hoặc đoạn liền trước; không coi mọi thẻ nhớ thiếu là quà khuyến mãi.",
+      "keywords": [
+        "không có thẻ nhớ",
+        "không thấy thẻ nhớ",
+        "không nhận được quà"
+      ],
+      "patterns": [
+        "(?:khi\\s+)?(?:giao|nhận)(?:\\s+hàng)?(?:\\s+(?:thì|về|đến|tới)){0,2}\\s+(?:không|chẳng)\\s+(?:có|thấy)$",
+        "(?:không|chẳng)\\s+(?:có|thấy|nhận\\s+được)\\s+(?:quà(?:\\s+tặng)?|thẻ\\s+nhớ)"
+      ],
+      "required_context_patterns": [
+        "(?:hứa|cam\\s+kết|được|sẽ)\\s+(?:được\\s+)?tặng(?:\\s+thêm)?\\s+(?:\\d+\\s+)?(?:thẻ\\s+nhớ|quà(?:\\s+tặng)?|phụ\\s+kiện)"
+      ],
+      "context_scope": "same_or_previous_idea"
+    },
+    {
+      "id": "electronics_tech.product_quality.connectivity_failure",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Trải nghiệm thực tế kết nối thiết bị khó, thất bại hoặc không ổn định; kiểm tra phủ định tại từng lần xuất hiện.",
+      "keywords": [
+        "kết nối khó",
+        "kết nối thất bại",
+        "không kết nối được",
+        "kết nối không ổn định"
+      ],
+      "patterns": [
+        "kết\\s+nối\\s+(?:(?:rất|quá|khá|hơi|cực\\s+(?:kỳ|kì))\\s+){0,2}(?:khó|thất\\s+bại|không\\s+(?:được|ổn\\s+định))"
+      ]
+    },
+    {
+      "id": "electronics_tech.product_quality.repeated_connection_failure",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "ELECTRONICS_TECH"
+      ],
+      "strength": "strong",
+      "weight": 4,
+      "requires_negative_context": false,
+      "reason": "Lời phản ánh thất bại/hên xui trong chính đoạn nói về kết nối; không suy từ kết quả không liên quan.",
+      "keywords": [
+        "thất bại",
+        "hên xui"
+      ],
+      "required_context_patterns": [
+        "kết\\s+nối"
+      ]
+    },
+    {
+      "id": "general.product_quality.misleading_information",
+      "issue_type": "PRODUCT_QUALITY",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Khách phản ánh thông tin/thông số gây nhầm lẫn; không tự kết luận thông số sai từ một phép so sánh độ phân giải.",
+      "keywords": [
+        "thông tin dễ gây nhầm lẫn",
+        "thông tin gây hiểu nhầm"
+      ],
+      "patterns": [
+        "(?:thông\\s+tin|thông\\s+số|mô\\s+tả|độ\\s+phân\\s+giải)(?:\\s+(?:rất|quá|khá|dễ)){0,3}\\s+gây\\s+(?:nhầm\\s+lẫn|hiểu\\s+nhầm)"
+      ]
+    },
+    {
+      "id": "general.shipping_logistics.intensified_delay",
+      "issue_type": "SHIPPING_LOGISTICS",
+      "product_groups": [
+        "GENERAL"
+      ],
+      "strength": "moderate",
+      "weight": 3,
+      "requires_negative_context": false,
+      "reason": "Phàn nàn giao hàng chậm/trễ/lâu có từ nhấn mạnh; số ngày chờ đơn thuần chưa tự tạo issue.",
+      "keywords": [
+        "giao hàng rất chậm",
+        "giao hàng quá chậm",
+        "giao hàng cực kỳ chậm",
+        "giao hàng cực kì chậm"
+      ],
+      "patterns": [
+        "(?:giao(?:\\s+hàng)?|vận\\s+chuyển|giao\\s+nhận)\\s+(?:(?:rất|quá|khá|hơi|siêu|cực\\s+(?:kỳ|kì))\\s+){1,2}(?:chậm|trễ|lâu)"
+      ]
+    }
   ],
-
-  "SHIPPING_LOGISTICS": [
-    "giao lâu",
-    "giao hàng lâu",
-    "giao chậm",
-    "giao hàng chậm",
-    "giao trễ",
-    "ship chậm",
-    "ship lâu",
-    "vận chuyển chậm",
-    "đợi hàng lâu",
-    "thất lạc",
-    "giao sai",
-    "giao nhầm",
-    "giao thiếu",
-    "không nhận được hàng",
-    "chưa nhận được hàng"
+  "decision_policy": {
+    "eligible_sentiments": [
+      "Neutral",
+      "Negative"
+    ],
+    "negative_fallback_issue_type": "OTHER",
+    "negative_fallback_rule_id": "policy.negative_unclassified"
+  },
+  "segmentation": {
+    "aspect_field_labels": [
+      "chất liệu",
+      "chất liệu vải",
+      "chất vải",
+      "vải",
+      "đường may",
+      "đường chỉ",
+      "màu sắc",
+      "size",
+      "kích cỡ",
+      "kích thước",
+      "quà tặng",
+      "bảo hiểm",
+      "đổi trả",
+      "truy cập từ xa",
+      "độ phân giải"
+    ]
+  },
+  "routing_rules": [
+    {
+      "id": "context.packaging_damage",
+      "from_issue_type": "PRODUCT_QUALITY",
+      "to_issue_type": "SHIPPING_LOGISTICS",
+      "reason": "Đoạn đang phản ánh hộp/bao bì bị hư hại, không phải lỗi của sản phẩm bên trong.",
+      "patterns": [
+        "(?:hộp|bao\\s+bì|thùng)(?:\\s+(?:bên|ngoài|trong|giấy|carton|của|gương)){0,4}\\s+(?:(?:bị|đã|thì)\\s+)?(?:móp(?:\\s+méo)?|bẹp|rách|nát)",
+        "(?:hộp|bao\\s+bì|thùng)(?:\\s+(?:giấy|carton|bên\\s+ngoài)){0,2}\\s+(?:bị\\s+)?(?:bể|vỡ)"
+      ]
+    }
   ],
-
-  "CUSTOMER_SERVICE_RETURNS": [
-    "shop không phản hồi",
-    "shop phản hồi chậm",
-    "không phản hồi",
-    "không hỗ trợ",
-    "hỗ trợ kém",
-    "không bảo hành",
-    "từ chối bảo hành",
-    "bảo hành lâu",
-    "bảo hành không được",
-    "đổi trả khó",
-    "trả hàng khó",
-    "hoàn tiền khó",
-    "không hoàn tiền",
-    "khiếu nại lâu",
-    "không giải quyết",
-    "shop không xử lý"
-  ],
-
-  "PRICING_PROMOTIONS": [
-    "không đáng tiền",
-    "phí tiền",
-    "uổng tiền",
-    "đắt so với chất lượng",
-    "mắc so với chất lượng",
-    "giá quá cao",
-    "giá cao so với chất lượng",
-    "khuyến mãi ảo",
-    "giảm giá ảo",
-    "sale ảo",
-    "không nhận được khuyến mãi",
-    "không đúng khuyến mãi",
-    "không áp được mã",
-    "không dùng được mã",
-    "phát sinh phí",
-    "phí ẩn",
-    "chi phí ẩn",
-    "thanh toán cao hơn"
+  "protected_phrases": [
+    "sơ sài"
   ]
-},
-
-  "reported_complaint_markers": [
-    "thấy nhiều người",
-    "nghe nói",
-    "đọc review",
-    "nhiều người đánh giá",
-    "có người nói",
-    "mọi người bảo"
-  ],
-
-  "self_positive_markers": [
-    "mình nhận",
-    "tôi nhận",
-    "hàng mình nhận",
-    "hàng tôi nhận",
-    "của mình",
-    "của tôi",
-    "nhưng mình",
-    "nhưng tôi",
-    "vẫn ổn",
-    "vẫn tốt",
-    "nguyên vẹn",
-    "không sao"
-  ],
-
-  "GENERAL": {
-    "PRODUCT_QUALITY": [
-      "chất lượng rất tệ",
-      "chất lượng tệ",
-      "chất lượng kém",
-      "kém chất lượng",
-      "chất lượng không tốt",
-      "chất lượng không ổn",
-      "sản phẩm tệ",
-      "sản phẩm kém",
-      "sản phẩm lỗi",
-      "hàng lỗi",
-      "bị lỗi",
-      "lỗi kỹ thuật",
-      "bị hư",
-      "bị hỏng",
-      "hư hỏng",
-      "không dùng được",
-      "không sử dụng được",
-      "dùng được vài ngày",
-      "sử dụng được vài ngày",
-      "mới dùng đã hỏng",
-      "mới dùng đã lỗi",
-      "nhanh hỏng",
-      "không bền",
-
-      "không giống hình",
-      "khác hình",
-      "khác mô tả",
-      "không giống mô tả",
-      "không như quảng cáo",
-      "không như livestream",
-      "treo đầu dê bán thịt chó",
-      "ảnh một đằng hàng một nẻo",
-      "mô tả sai",
-      "sai mô tả",
-
-      "hàng fake",
-      "hàng giả",
-      "hàng nhái",
-      "không chính hãng",
-      "không phải hàng chính hãng",
-      "sản phẩm giả",
-      "giả mạo",
-
-      "bị móp",
-      "móp méo",
-      "bị bể",
-      "bị vỡ",
-      "bể vỡ",
-      "nứt",
-      "trầy xước",
-      "bị trầy",
-      "bị xước",
-      "rách",
-      "bong tróc",
-
-      "thiếu phụ kiện",
-      "hàng không đúng",
-      "không đúng mẫu",
-      "không đúng màu",
-      "không đúng size",
-      "thất vọng với sản phẩm",
-      "chán với sản phẩm"
-    ],
-
-    "SHIPPING_LOGISTICS": [
-      "giao hàng chậm",
-      "giao chậm",
-      "giao trễ",
-      "trễ hẹn",
-      "giao lâu",
-      "đợi lâu",
-      "ngâm kho",
-      "kẹt kho",
-      "đơn bị ngâm",
-      "quá lâu mới nhận được",
-
-      "thất lạc",
-      "mất hàng",
-      "không nhận được hàng",
-      "chưa nhận được hàng",
-      "shipper làm mất",
-
-      "tráo hàng",
-      "bị tráo hàng",
-      "tráo ruột",
-      "hàng bị đổi ruột",
-      "hộp rỗng",
-      "nhận hộp rỗng",
-
-      "giao sai sản phẩm",
-      "giao sai hàng",
-      "giao nhầm hàng",
-      "giao nhầm sản phẩm",
-      "sai sản phẩm",
-      "thiếu hàng",
-      "giao thiếu hàng",
-
-      "phí ship cao",
-      "ship cao",
-      "phí vận chuyển cao",
-      "tiền ship cao",
-      "ship mắc",
-      "phí giao hàng cao",
-      "phí vận chuyển đắt"
-    ],
-
-    "CUSTOMER_SERVICE_RETURNS": [
-      "shop không phản hồi",
-      "shop phản hồi chậm",
-      "phản hồi chậm",
-      "không trả lời tin nhắn",
-      "nhắn không trả lời",
-      "chăm sóc khách hàng kém",
-      "dịch vụ kém",
-      "thái độ kém",
-      "không hỗ trợ",
-      "hỗ trợ kém",
-      "từ chối giải quyết",
-      "không giải quyết",
-      "đùn đẩy trách nhiệm",
-      "shop không xử lý",
-      "không xử lý",
-
-      "bảo hành lâu",
-      "bảo hành khó",
-      "bảo hành không được",
-      "không bảo hành",
-      "từ chối bảo hành",
-      "không hỗ trợ bảo hành",
-
-      "đổi trả khó",
-      "trả hàng khó",
-      "hoàn tiền khó",
-      "quy trình đổi trả phức tạp",
-      "thủ tục rườm rà",
-      "khiếu nại lâu",
-      "xử lý khiếu nại lâu",
-      "chờ hoàn tiền lâu",
-      "không cho trả hàng",
-      "không được hoàn tiền",
-      "không hoàn tiền",
-      "không chấp nhận đổi trả",
-      "refund",
-      "return",
-      "hoàn tiền",
-      "trả hàng",
-      "đổi hàng",
-      "khiếu nại"
-    ],
-
-    "PRICING_PROMOTIONS": [
-      "không đáng tiền",
-      "phí tiền",
-      "uổng tiền",
-      "đắt so với chất lượng",
-      "mắc so với chất lượng",
-      "giá quá cao",
-      "giá cao",
-      "giá mắc",
-      "giá đắt",
-
-      "khuyến mãi ảo",
-      "giảm giá ảo",
-      "sale ảo",
-      "nâng giá rồi giảm",
-      "tăng giá rồi giảm",
-      "giá gốc ảo",
-      "giá không rẻ",
-      "không rẻ hơn ngày thường",
-      "giảm giá nhưng vẫn đắt",
-
-      "phá giá",
-      "cạnh tranh phá giá",
-      "giá quá rẻ bất thường",
-      "xả hàng giá rẻ",
-      "giá hỗn loạn",
-
-      "phát sinh phí",
-      "phí ẩn",
-      "chi phí ẩn",
-      "thêm phí",
-      "tính thêm phí",
-      "giá hiển thị khác",
-      "thanh toán cao hơn",
-      "giá lúc thanh toán cao hơn",
-      "phí dịch vụ",
-      "phí nền tảng",
-      "thuế phát sinh"
-    ]
-  },
-
-  "FMCG_BEAUTY_HEALTH": {
-    "PRODUCT_QUALITY": [
-      "hết hạn",
-      "gần hết hạn",
-      "date ngắn",
-      "cận date",
-      "quá hạn",
-      "không rõ hạn sử dụng",
-
-      "mùi lạ",
-      "mùi hôi",
-      "mùi khó chịu",
-      "bị chảy",
-      "bị đổ",
-      "bị vỡ chai",
-      "nắp bị bung",
-      "bị rò rỉ",
-
-      "dị ứng",
-      "kích ứng",
-      "nổi mẩn",
-      "ngứa",
-      "đau bụng",
-      "tiêu chảy",
-      "buồn nôn",
-      "ngộ độc",
-
-      "mỹ phẩm fake",
-      "kem fake",
-      "son fake",
-      "không rõ nguồn gốc"
-    ],
-
-    "SHIPPING_LOGISTICS": [
-      "chai bị vỡ",
-      "lọ bị vỡ",
-      "đổ ra ngoài",
-      "chảy ra ngoài",
-      "bao bì bị rách",
-      "hàng bị móp",
-      "hàng bị đè",
-      "hàng bị chảy khi giao"
-    ],
-
-    "CUSTOMER_SERVICE_RETURNS": [
-      "không cho đổi sản phẩm hết hạn",
-      "không hỗ trợ đổi hàng",
-      "không hoàn tiền sản phẩm lỗi",
-      "shop không xử lý hàng hết hạn"
-    ]
-  },
-
-  "ELECTRONICS_TECH": {
-    "PRODUCT_QUALITY": [
-      "không lên nguồn",
-      "không sạc được",
-      "sạc không vào",
-      "sạc nhanh đầy nhưng hết pin nhanh",
-      "sạc nhanh đầy nhưng không chạy được lâu",
-      "pin yếu",
-      "pin tụt nhanh",
-      "tụt pin nhanh",
-      "hết pin nhanh",
-      "hết pin quá nhanh",
-      "pin hết nhanh",
-      "pin nhanh hết",
-      "chai pin",
-      "không chạy được lâu",
-      "không dùng được lâu",
-      "sử dụng không được lâu",
-      "thời lượng pin kém",
-      "thời lượng pin yếu",
-
-      "màn hình lỗi",
-      "màn hình sọc",
-      "cảm ứng lỗi",
-      "máy nóng",
-      "loa rè",
-      "âm thanh rè",
-      "âm thanh kém",
-      "âm thanh tầm thường",
-      "mất tiếng",
-      "không nghe được",
-
-      "mất kết nối",
-      "bluetooth chập chờn",
-      "kết nối chập chờn",
-
-      "dây mỏng",
-      "dây mỏng manh",
-      "dễ đứt",
-      "dễ hỏng"
-    ],
-
-    "SHIPPING_LOGISTICS": [
-      "bị tráo máy",
-      "tráo hàng",
-      "hộp rỗng",
-      "mất phụ kiện",
-      "thiếu cáp",
-      "thiếu sạc",
-      "thiếu tai nghe",
-      "hàng bị va đập",
-      "hộp móp méo"
-    ],
-
-    "CUSTOMER_SERVICE_RETURNS": [
-      "bảo hành lâu",
-      "bảo hành khó",
-      "bảo hành kém",
-      "không bảo hành",
-      "không hỗ trợ bảo hành",
-      "từ chối bảo hành",
-      "đổi trả máy khó",
-      "không cho đổi máy",
-      "không cho trả máy"
-    ]
-  },
-
-  "FASHION_ACCESSORIES": {
-    "PRODUCT_QUALITY": [
-      "sai size",
-      "không đúng size",
-      "size nhỏ",
-      "size lớn",
-      "hơi nhỏ",
-      "hơi rộng",
-      "hơi bó",
-      "bị bó",
-      "chật",
-      "rộng",
-      "không vừa",
-
-      "sai màu",
-      "không đúng màu",
-      "màu khác",
-      "khác màu hình",
-      "màu ngoài khác ảnh",
-
-      "vải xấu",
-      "chất vải xấu",
-      "chất liệu kém",
-      "chất liệu mỏng",
-      "đường may lỗi",
-      "bung chỉ",
-      "rách chỉ",
-      "lem màu",
-      "phai màu",
-      "bạc màu",
-      "form xấu",
-      "form không đẹp",
-      "không giống ảnh",
-      "khác ảnh",
-      "mẫu không giống hình",
-
-      "xi mạ kém",
-      "bị đen",
-      "bị gỉ",
-      "bị xỉn màu",
-      "rụng đá",
-      "rơi đá",
-      "gãy móc",
-      "hỏng khóa"
-    ],
-
-    "SHIPPING_LOGISTICS": [
-      "giao sai mẫu",
-      "giao sai màu",
-      "giao sai size",
-      "giao nhầm màu",
-      "thiếu món",
-      "thiếu phụ kiện",
-      "đóng gói sơ sài",
-      "hộp bị móp",
-      "bao bì rách"
-    ],
-
-    "CUSTOMER_SERVICE_RETURNS": [
-      "không cho đổi size",
-      "đổi size khó",
-      "shop không hỗ trợ đổi size",
-      "không cho đổi màu",
-      "không cho đổi mẫu",
-      "không nhận đổi trả quần áo",
-      "không nhận đổi trả phụ kiện"
-    ]
-  }
 }

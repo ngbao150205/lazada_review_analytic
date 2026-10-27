@@ -152,6 +152,7 @@ def rebuild_sentiment_analysis(
             analysis.confidence = confidence
             analysis.model_version = final_result.get("model_name") or MODEL_VERSION
             analysis.analysis_method = method
+            analysis.decision_details = final_result
 
             review.is_analyzed = True
             review.updated_at = datetime.utcnow()

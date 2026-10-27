@@ -35,7 +35,6 @@ export interface ProductReview {
 
   risk?: {
     risk_flag: boolean;
-    risk_level: string;
     risk_keyword: string | null;
   };
 }
@@ -70,6 +69,10 @@ export interface ProductAnalysisResponse {
   };
 
   analysis_history_id: number;
+
+  crawl_status?: 'FULL' | 'PARTIAL';
+  crawl_error?: string | null;
+  retry_after_seconds?: number;
 
   reviews: unknown[];
 }

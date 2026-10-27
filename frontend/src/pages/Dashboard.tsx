@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { AlertTriangle, ArrowRight, Clock } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock, Loader2, RefreshCw } from "lucide-react";
 import SentimentChart from "../components/SentimentChart";
 import IssueChart from "../components/IssueChart";
-import StatCard from "../components/StatCard";
+import ProductInsights from "../components/ProductInsights";
 import { AnalysisTrendChart, RatingChart, RiskChart } from "../components/DashboardCharts";
-import { getProductAnalysis, type ProductAnalysisApiResponse } from "../services/api";
+import { getProductAnalysis, reanalyzeProduct, type ProductAnalysisApiResponse } from "../services/api";
 
 function formatDate(value?: string | null): string {
   if (!value) return "Dữ liệu hiện có";
@@ -28,6 +28,47 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const [reanalysisMessage, setReanalysisMessage] = useState("");
+  const [reanalysisError, setReanalysisError] = useState("");
+  const reanalysisInFlight = useRef(false);
+  const currentProductId = useRef(productId);
+  currentProductId.current = productId;
+
+  useEffect(() => {
+    setReanalysisMessage("");
+    setReanalysisError("");
+  }, [productId]);
+
+  async function handleReanalyze() {
+    if (!productId || reanalysisInFlight.current) return;
+    const requestedProductId = productId;
+    reanalysisInFlight.current = true;
+    setReanalyzing(true);
+    setReanalysisError("");
+    setReanalysisMessage("");
+    try {
+      const result = await reanalyzeProduct(requestedProductId);
+      if (currentProductId.current !== requestedProductId) return;
+      setReanalysisMessage(
+        `Đã phân tích lại ${number(result.reanalyzed_reviews)} đánh giá, ${number(result.changed_sentiments)} đánh giá thay đổi nhãn cảm xúc.`
+        + (result.skipped_reviews ? ` ${number(result.skipped_reviews)} đánh giá không đủ văn bản cho AI.` : "")
+        + ` Ngành hàng: ${result.classification.label}${result.classification.changed ? " (đã cập nhật)" : ""}.`
+        + ` Ngưỡng tin model: ${result.analysis_config.model_confidence_threshold}. Đã cập nhật vấn đề, rủi ro và lưu lần phân tích mới.`,
+      );
+      const next = new URLSearchParams(searchParams);
+      next.set("historyId", String(result.analysis_history_id));
+      setSearchParams(next);
+      setRetry(value => value + 1);
+    } catch (err) {
+      if (currentProductId.current === requestedProductId) {
+        setReanalysisError(err instanceof Error ? err.message : "Không thể phân tích AI lại. Vui lòng thử lại.");
+      }
+    } finally {
+      reanalysisInFlight.current = false;
+      setReanalyzing(false);
+    }
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -71,9 +112,6 @@ function Dashboard() {
 
   const { analysis, product, histories = [] } = data;
   const rating = analysis.rating_summary;
-  const flagged = Object.values(analysis.risk_summary).reduce((sum, count) => sum + count, 0);
-  const coverage = analysis.total_reviews ? analysis.analyzed_reviews / analysis.total_reviews * 100 : 0;
-  const currentRatings = analysis.rating_summary_source === "current";
   const newest = histories[0]?.id === analysis.history_id;
 
   return <div className="space-y-6">
@@ -82,10 +120,26 @@ function Dashboard() {
       <div className="min-w-0">
         <p className="text-sm font-semibold text-blue-600">Dashboard sản phẩm</p>
         <h1 className="mt-1 break-words text-3xl font-bold text-slate-900">{product.name || "Sản phẩm"}</h1>
-        <p className="mt-2 text-sm text-slate-500">Số sao, cảm xúc và cảnh báo từ những đánh giá đã thu thập.</p>
+        {product.category_label && <p className="mt-2 text-sm font-medium text-slate-700">Ngành hàng hiện tại: {product.category_label}</p>}
       </div>
       <Link to={`/products/${productId}/reviews`} className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-blue-300 hover:text-blue-600">Xem đánh giá <ArrowRight size={16} /></Link>
     </header>
+
+    <section aria-label="Phân tích AI lại" className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-2xl">
+          <h2 className="font-semibold text-slate-900">Phân tích lại dữ liệu đã lưu</h2>
+          <p className="mt-1 text-sm text-slate-500">Dùng toàn bộ đánh giá hiện có của sản phẩm để chạy AI và các quy tắc hiện tại, cập nhật cảm xúc, vấn đề và rủi ro. Không cần thu thập lại từ Lazada.</p>
+        </div>
+        <button type="button" onClick={() => void handleReanalyze()} disabled={reanalyzing || product.total_reviews === 0}
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60">
+          {reanalyzing ? <><Loader2 size={16} className="animate-spin" />Đang phân tích AI...</> : <><RefreshCw size={16} />Phân tích AI lại</>}
+        </button>
+      </div>
+      {reanalyzing && <p role="status" className="mt-3 text-sm text-blue-700">Đang xử lý các đánh giá đã lưu. Tác vụ có thể mất nhiều phút; vui lòng giữ trang này mở.</p>}
+      {reanalysisMessage && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">{reanalysisMessage}</p>}
+      {reanalysisError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{reanalysisError}</p>}
+    </section>
 
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
       <div className="flex items-center gap-3">
@@ -97,7 +151,7 @@ function Dashboard() {
       </div>
       {histories.length > 1 && <div className="flex min-w-0 flex-wrap items-center gap-2">
         <label htmlFor="dashboard-history" className="text-xs font-medium text-slate-600">Chuyển lần phân tích</label>
-        <select id="dashboard-history" value={analysis.history_id ?? ""} onChange={(event) => {
+        <select id="dashboard-history" value={analysis.history_id ?? ""} disabled={reanalyzing} onChange={(event) => {
           const next = new URLSearchParams(searchParams);
           next.set("historyId", event.target.value);
           setSearchParams(next);
@@ -107,20 +161,16 @@ function Dashboard() {
       </div>}
     </div>
 
-    <section aria-label="Chỉ số tổng quan" className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      <StatCard title="Tổng số đánh giá" value={number(analysis.total_reviews)} description="Số đánh giá đã lưu tại lần phân tích đang chọn" />
-      <StatCard title="Điểm sao trung bình" value={rating?.average_rating == null ? "—" : `${rating.average_rating.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} / 5`} description={rating ? `${number(rating.rated_reviews)} đánh giá có sao${currentRatings ? " · dữ liệu hiện có" : ""}` : "Lần phân tích cũ chưa lưu thống kê số sao"} />
-      <StatCard title="Đánh giá có cảnh báo" value={number(flagged)} description="Đánh giá được gắn cờ rủi ro ở lần phân tích đang chọn" />
-      <StatCard title="Đã phân tích cảm xúc" value={`${coverage.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`} description={`${number(analysis.analyzed_reviews)} / ${number(analysis.total_reviews)} đánh giá đã có kết quả cảm xúc`} />
-    </section>
+    <SentimentChart positive={analysis.positive_count} negative={analysis.negative_count} neutral={analysis.neutral_count} />
+
+    <ProductInsights data={analysis.insights} source={analysis.insights_source} productId={productId} historyId={analysis.history_id} />
 
     <section className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-2">
       <RatingChart summary={rating} source={analysis.rating_summary_source} />
-      <RiskChart summary={analysis.risk_summary} totalReviews={analysis.total_reviews} productId={productId} />
-      <SentimentChart positive={analysis.positive_count} negative={analysis.negative_count} neutral={analysis.neutral_count} />
+      <RiskChart summary={analysis.risk_summary} totalReviews={analysis.risk_total_reviews ?? analysis.total_reviews} productId={productId} source={analysis.risk_summary_source} />
       <IssueChart data={analysis.issue_summary} />
+      <AnalysisTrendChart histories={histories} selectedId={analysis.history_id} />
     </section>
-    <AnalysisTrendChart histories={histories} selectedId={analysis.history_id} />
   </div>;
 }
 

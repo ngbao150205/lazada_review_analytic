@@ -1,5 +1,7 @@
 import { API_BASE_URL, apiFetch } from "../services/http";
 import { useEffect, useMemo, useState } from "react";
+import type { ProductIssue } from "../services/api";
+import IssueEvidenceDetails from "../components/IssueEvidenceDetails";
 
 import {
   useParams,
@@ -15,16 +17,10 @@ import {
 
 
 
-type ReviewIssue = {
-  id?: number;
-  review_id?: number;
-  issue_type: string;
-  matched_keyword: string;
-};
+type ReviewIssue = ProductIssue;
 
 type ReviewRisk = {
   risk_flag?: boolean;
-  risk_level?: string;
   risk_keyword?: string | null;
 };
 
@@ -104,6 +100,7 @@ function getIssueLabel(issueType: string): string {
     SHIPPING_LOGISTICS: "Giao hàng và vận chuyển",
     CUSTOMER_SERVICE_RETURNS: "Dịch vụ khách hàng và đổi trả",
     PRICING_PROMOTIONS: "Giá cả và khuyến mãi",
+    OTHER: "Vấn đề khác",
   };
 
   return labels[issueType] || issueType;
@@ -561,7 +558,7 @@ function Issues() {
                     </span>
 
                     <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-                      Keyword: {issue.matched_keyword}
+                      {issue.matched_keyword ? `Keyword: ${issue.matched_keyword}` : "Chưa xác định nhóm cụ thể"}
                     </span>
 
                     {sentiment && (
@@ -585,6 +582,8 @@ function Issues() {
                     {review.content || "Không có nội dung review."}
                   </p>
 
+                  <IssueEvidenceDetails evidence={issue.evidence} label={getIssueLabel(issue.issue_type)} />
+
                   <div className="flex flex-wrap gap-3 text-xs text-slate-500">
                     <span>Review ID: {getReviewDisplayId(review)}</span>
 
@@ -592,7 +591,7 @@ function Issues() {
 
                     {review.risk?.risk_flag === true && (
                       <span>
-                        Risk: {review.risk.risk_level}
+                        Cảnh báo rủi ro
                         {review.risk.risk_keyword
                           ? ` · ${review.risk.risk_keyword}`
                           : ""}

@@ -81,8 +81,20 @@ __pycache__/
 !examples/reviews.csv
 *.xlsx
 *.xls
-!backend/tests/fixtures/reviews.xls
 *.jsonl
+
+# ==================================
+# Local tests and documentation
+# ==================================
+
+tests/
+__tests__/
+test_*.py
+*_test.py
+*.test.*
+*.spec.*
+*.[mM][dD]
+!/README.md
 
 
 # ==================================

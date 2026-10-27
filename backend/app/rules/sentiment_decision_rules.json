@@ -25,7 +25,6 @@
     "sẽ order thêm",
     "order thêm",
     "mua thêm",
-
     "đúng mô tả",
     "đúng hình",
     "đúng mẫu",
@@ -46,7 +45,6 @@
     "form đẹp",
     "vải đẹp",
     "chất vải đẹp",
-
     "giao nhanh",
     "giao hàng nhanh",
     "giao đúng hẹn",
@@ -56,13 +54,11 @@
     "đóng gói chắc chắn",
     "hàng nguyên vẹn",
     "nhận hàng nguyên vẹn",
-
     "shop phản hồi nhanh",
     "shop hỗ trợ tốt",
     "shop tư vấn nhiệt tình",
     "shop nhiệt tình",
     "dịch vụ tốt",
-
     "rất thoải mái",
     "thoải mái",
     "dễ chịu",
@@ -78,9 +74,30 @@
     "xịn",
     "xịn sò",
     "tuyệt",
-    "tuyệt vời"
+    "tuyệt vời",
+    "đẹp",
+    "ngon",
+    "nhận về nguyên vẹn",
+    "shop hỗ trợ rất nhiệt tình",
+    "lịch sự",
+    "hỗ trợ tốt",
+    "bền",
+    "đóng gói chuẩn chỉ",
+    "mở ra là dùng",
+    "đúng như mẫu",
+    "ngon lành",
+    "dễ sử dụng",
+    "xinh",
+    "size đúng",
+    "đúng theo bảng đo",
+    "nhìn chuẩn",
+    "chất liệu chắc chắn",
+    "chất vải chắc chắn",
+    "giống như hình",
+    "giống như ảnh",
+    "đỉnh điên",
+    "đỉnh của chóp"
   ],
-
   "negative_evidence": [
     "rất tệ",
     "quá tệ",
@@ -97,7 +114,6 @@
     "khó chịu",
     "bực",
     "bực mình",
-
     "không đáng tiền",
     "phí tiền",
     "uổng tiền",
@@ -108,7 +124,6 @@
     "giá mắc",
     "đắt so với chất lượng",
     "mắc so với chất lượng",
-
     "lỗi",
     "bị lỗi",
     "sản phẩm lỗi",
@@ -128,7 +143,6 @@
     "mới dùng đã lỗi",
     "nhanh hỏng",
     "không bền",
-
     "giao hàng chậm",
     "giao chậm",
     "giao lâu",
@@ -142,7 +156,6 @@
     "giao nhầm",
     "giao thiếu",
     "thiếu hàng",
-
     "shop không phản hồi",
     "shop phản hồi chậm",
     "không phản hồi",
@@ -155,7 +168,6 @@
     "từ chối bảo hành",
     "đổi trả khó",
     "trả hàng khó",
-
     "hàng fake",
     "hàng giả",
     "hàng nhái",
@@ -167,9 +179,46 @@
     "khác hình",
     "không đúng mẫu",
     "không đúng màu",
-    "không đúng size"
+    "không đúng size",
+    "đau tai",
+    "pin yếu",
+    "pin nhanh hết",
+    "pin hơi yếu",
+    "kích ứng",
+    "rát",
+    "ngứa",
+    "pin phồng",
+    "nguy hiểm",
+    "mùi ôi",
+    "hết hạn",
+    "không thích",
+    "không thể sử dụng",
+    "yếu",
+    "giao hàng lâu",
+    "hộp mỏng",
+    "dùng không được",
+    "sử dụng không được",
+    "hoạt động không được",
+    "chưa dùng được",
+    "sai sót",
+    "size không đúng",
+    "size không chuẩn",
+    "chất liệu không chắc chắn",
+    "không được đổi trả",
+    "không cho đổi trả",
+    "không thể đổi trả",
+    "kết nối khó",
+    "kết nối thất bại",
+    "không kết nối được",
+    "kết nối không ổn định",
+    "thất bại",
+    "ức chế",
+    "gây nhầm lẫn",
+    "gây hiểu nhầm",
+    "đóng hàng không chắc chắn",
+    "đóng gói không chắc chắn",
+    "lâu khủng khiếp"
   ],
-
   "positive_negation_patterns": [
     "không đau",
     "không bị đau",
@@ -184,7 +233,6 @@
     "k đau",
     "k bị đau",
     "k đau tai",
-
     "không lỗi",
     "không bị lỗi",
     "không có lỗi",
@@ -204,12 +252,35 @@
     "không bị vỡ",
     "không rách",
     "không thiếu",
-
     "không có gì phải chê",
     "không chê",
-    "không cần bluetooth"
+    "không bị bể",
+    "không bể",
+    "không cần đổi trả",
+    "không cần đổi hàng",
+    "không cần trả hàng",
+    "không có sai sót",
+    "không bị sai sót",
+    "không có bất kỳ sai sót",
+    "giao hàng không lâu",
+    "giao hàng không quá lâu",
+    "giao không lâu",
+    "giao không quá lâu",
+    "vận chuyển không lâu",
+    "vận chuyển không quá lâu",
+    "không đợi lâu",
+    "không đợi quá lâu",
+    "không chờ lâu",
+    "không chờ quá lâu",
+    "không phải đợi lâu",
+    "không phải đợi quá lâu",
+    "không phải chờ lâu",
+    "không phải chờ quá lâu",
+    "không cần đợi lâu",
+    "không cần đợi quá lâu",
+    "không cần chờ lâu",
+    "không cần chờ quá lâu"
   ],
-
   "negative_phrases": [
     "không tốt",
     "không ổn",
@@ -229,7 +300,6 @@
     "không chạy",
     "không lên nguồn",
     "không sạc được",
-
     "ko tốt",
     "ko ổn",
     "ko hay",
@@ -240,7 +310,6 @@
     "ko sử dụng được",
     "ko nghe được",
     "ko nhận được",
-
     "k tốt",
     "k ổn",
     "k hay",
@@ -250,9 +319,10 @@
     "k dùng được",
     "k sử dụng được",
     "k nghe được",
-    "k nhận được"
+    "k nhận được",
+    "không thể sử dụng",
+    "không thích"
   ],
-
   "strong_negative_keywords": [
     "rất tệ",
     "quá tệ",
@@ -289,9 +359,15 @@
     "màn hình sọc",
     "cảm ứng lỗi",
     "mất tiếng",
-    "mất kết nối"
+    "mất kết nối",
+    "kích ứng",
+    "pin phồng",
+    "nguy hiểm",
+    "mùi ôi",
+    "hết hạn",
+    "kết nối thất bại",
+    "không kết nối được"
   ],
-
   "future_uncertainty_patterns": [
     "không biết",
     "ko biết",
@@ -313,7 +389,6 @@
     "để dùng thêm",
     "để xài thêm"
   ],
-
   "future_issue_patterns": [
     "có bị",
     "có lỗi",
@@ -335,7 +410,6 @@
     "bị hỏng",
     "bị lỗi"
   ],
-
   "negation_words": [
     "không",
     "ko",
@@ -343,15 +417,402 @@
     "kh",
     "chưa",
     "chẳng",
-    "chả"
+    "chả",
+    "hông",
+    "khong"
   ],
-
   "positive_rating_threshold": 4,
   "negative_rating_threshold": 2,
-
+  "neutral_rating": 3,
   "conflict_policy": {
     "positive_model_low_rating": "review_text_then_rating",
     "negative_model_high_rating": "review_text_then_rating",
     "neutral_model_extreme_rating": "rating_if_text_clear"
-  }
+  },
+  "rule_version": "idea_context_v3_3",
+  "mixed_sentiment_rating_policy": {
+    "3": "Neutral",
+    "4": "Neutral",
+    "5": "Positive"
+  },
+  "sarcastic_praise_patterns": [
+    "tốt quá nhỉ",
+    "giao nhanh ghê"
+  ],
+  "rule_confidence": {
+    "Positive": 0.75,
+    "Negative": 0.7,
+    "Neutral": 0.6
+  },
+  "clause_connectors": [
+    "nhưng",
+    "tuy nhiên",
+    "mặc dù",
+    "dù",
+    "tuy",
+    "vậy mà",
+    "thế mà",
+    "bù lại",
+    "mà còn",
+    "vì"
+  ],
+  "current_context_markers": [
+    "thực tế",
+    "hóa ra",
+    "giờ",
+    "hiện tại",
+    "lần này",
+    "tổng thể",
+    "nhìn chung",
+    "nói chung"
+  ],
+  "reported_context_patterns": [
+    "shop nói",
+    "shop bảo",
+    "shop quảng cáo",
+    "shop cam kết",
+    "nhiều người bảo",
+    "người khác nói",
+    "người ta nói",
+    "nghe nói",
+    "từng đọc bình luận",
+    "đọc bình luận",
+    "đừng nghe câu",
+    "thấy nhiều người",
+    "đọc review",
+    "nhiều người đánh giá",
+    "có người nói",
+    "mọi người bảo"
+  ],
+  "hypothetical_context_patterns": [
+    "nếu",
+    "giả sử",
+    "giả dụ",
+    "sợ",
+    "lo rằng",
+    "tưởng"
+  ],
+  "no_experience_patterns": [
+    "chưa dùng",
+    "chưa sử dụng",
+    "chưa thử",
+    "chưa khui",
+    "chưa trải nghiệm",
+    "đánh giá trước"
+  ],
+  "reward_patterns": [
+    "nhận xu",
+    "nhận quà",
+    "nhận thưởng"
+  ],
+  "question_patterns": [
+    "khi nào",
+    "bao giờ",
+    "có hỗ trợ",
+    "có đổi không",
+    "có bảo hành không",
+    "có dùng được không",
+    "thì sao",
+    "xử lý thế nào"
+  ],
+  "past_context_patterns": [
+    "lúc đầu",
+    "ban đầu",
+    "lần trước",
+    "trước đây"
+  ],
+  "resolution_patterns": [
+    "đã đổi",
+    "đã sửa",
+    "đã thay",
+    "đã khắc phục",
+    "đã được đổi",
+    "đã được sửa"
+  ],
+  "uncommitted_patterns": [
+    "tùy người",
+    "tùy cảm nhận"
+  ],
+  "neutral_evidence": [
+    "bình thường",
+    "tạm được",
+    "chấp nhận được",
+    "đã nhận hàng",
+    "chưa đánh giá",
+    "nhận đủ hàng"
+  ],
+  "overall_markers": [
+    "tổng thể",
+    "nhìn chung",
+    "nói chung"
+  ],
+  "overall_negative_patterns": [
+    "thất vọng",
+    "không hài lòng",
+    "phí tiền",
+    "uổng tiền",
+    "rất tệ",
+    "quá tệ"
+  ],
+  "critical_negative_patterns": [
+    "hỏng",
+    "hư",
+    "không dùng được",
+    "không sử dụng được",
+    "không thể sử dụng",
+    "không hoạt động",
+    "không lên nguồn",
+    "không sạc được",
+    "hàng giả",
+    "hàng fake",
+    "lừa đảo",
+    "pin phồng",
+    "nguy hiểm",
+    "kích ứng",
+    "mùi ôi",
+    "hết hạn",
+    "kết nối thất bại",
+    "không kết nối được"
+  ],
+  "reported_context_exceptions": [
+    "shop nói chuyện"
+  ],
+  "reported_continuation_breaks": [
+    "mình",
+    "tôi",
+    "em",
+    "nhận hàng",
+    "nhận về",
+    "nhận được"
+  ],
+  "contrast_connectors": [
+    "nhưng",
+    "tuy nhiên",
+    "mặc dù",
+    "dù",
+    "tuy",
+    "vậy mà",
+    "thế mà",
+    "bù lại"
+  ],
+  "intensifiers": [
+    "rất",
+    "quá",
+    "khá",
+    "hơi",
+    "thật sự",
+    "cực kỳ",
+    "siêu",
+    "cực kì"
+  ],
+  "aspect_field_labels": [
+    "đáng tiền",
+    "dễ sử dụng",
+    "độ bền",
+    "chất lượng",
+    "ngoại hình",
+    "hiệu năng",
+    "âm thanh",
+    "pin",
+    "giao hàng",
+    "truy cập từ xa",
+    "độ phân giải"
+  ],
+  "usage_condition_patterns": [
+    "miễn đừng",
+    "miễn là không",
+    "tránh dùng cho",
+    "không dành cho"
+  ],
+  "descriptive_patterns": [
+    "là loại",
+    "là dòng",
+    "dùng để",
+    "kích thước là"
+  ],
+  "suspected_complaint_patterns": [
+    "không",
+    "chưa",
+    "thiếu",
+    "chập chờn",
+    "tụt",
+    "yếu",
+    "lỏng",
+    "hỏng",
+    "hư",
+    "lỗi",
+    "mỏng",
+    "trễ",
+    "lâu",
+    "trầy",
+    "nứt",
+    "vỡ",
+    "rò",
+    "phồng",
+    "chửi",
+    "sơ sài",
+    "thất bại",
+    "ức chế",
+    "nhầm lẫn",
+    "khó kết nối"
+  ],
+  "shipping_delay_patterns": [
+    "giao hàng chậm",
+    "giao hàng trễ",
+    "giao chậm",
+    "giao trễ",
+    "giao hàng lâu",
+    "giao lâu",
+    "vận chuyển chậm",
+    "vận chuyển trễ"
+  ],
+  "descriptive_confidence_threshold": 0.65,
+  "sentence_abbreviations": [
+    "tp.",
+    "p.",
+    "q.",
+    "v.v.",
+    "vd.",
+    "v.d.",
+    "ts.",
+    "th.s."
+  ],
+  "line_continuation_endings": [
+    "không",
+    "chẳng",
+    "chưa",
+    "rất",
+    "hơi",
+    "khá",
+    "của",
+    "và",
+    "được",
+    "bị",
+    "với"
+  ],
+  "informational_patterns": [
+    "thank shop",
+    "thanks shop",
+    "cảm ơn shop",
+    "có kèm tờ hướng dẫn"
+  ],
+  "aspect_keywords": {
+    "PACKAGING": [
+      "đóng gói",
+      "hộp",
+      "bao bì"
+    ],
+    "SHIPPING": [
+      "giao hàng",
+      "giao chậm",
+      "giao nhanh",
+      "ship",
+      "vận chuyển"
+    ],
+    "DURABILITY": [
+      "độ bền",
+      "bền"
+    ],
+    "BATTERY": [
+      "pin",
+      "sạc"
+    ],
+    "SOUND": [
+      "âm thanh",
+      "loa",
+      "tai nghe",
+      "đau tai"
+    ],
+    "SUPPORT": [
+      "hỗ trợ",
+      "dịch vụ",
+      "shop nhiệt tình"
+    ],
+    "APPEARANCE": [
+      "ngoại hình",
+      "màu",
+      "chất vải"
+    ],
+    "FUNCTIONALITY": [
+      "máy",
+      "hoạt động",
+      "lên nguồn",
+      "lực siết",
+      "bắn vít",
+      "dễ sử dụng",
+      "hiệu năng",
+      "kết nối",
+      "truy cập từ xa",
+      "wifi",
+      "bluetooth"
+    ],
+    "QUALITY": [
+      "chất lượng",
+      "chính hãng",
+      "hàng giả",
+      "hàng nhái",
+      "hàng fake"
+    ],
+    "VALUE": [
+      "đáng tiền",
+      "giá",
+      "sale"
+    ]
+  },
+  "actual_failure_patterns": [
+    "chưa dùng được",
+    "chưa sử dụng được"
+  ],
+  "causal_uncertainty_patterns": [
+    "không biết vì sao",
+    "không biết tại sao",
+    "không biết do đâu",
+    "không rõ nguyên nhân"
+  ],
+  "non_product_content_policy": {
+    "promotion_markers": [
+      "pass đồ",
+      "pass 0₫",
+      "pass 0đ",
+      "pass đồ 0₫",
+      "pass đồ 0đ"
+    ],
+    "invitation_markers": [
+      "chấm dưới",
+      "chấm duới",
+      "lên pass",
+      "thgia",
+      "tham gia",
+      "inbox"
+    ],
+    "product_experience_markers": [
+      "nhận hàng",
+      "nhận về",
+      "mình mua",
+      "tôi mua",
+      "giao hàng",
+      "giao lâu",
+      "đóng gói",
+      "phấn mắt vỡ",
+      "bể nhũ",
+      "bị bể",
+      "bị vỡ",
+      "móp méo",
+      "không thấy cọ",
+      "kích ứng",
+      "không dùng được"
+    ]
+  },
+  "insufficient_text_policy": {
+    "long_token_min_length": 24,
+    "long_token_min_character_share": 0.6,
+    "reason": "Chuỗi chữ liền dài chiếm phần lớn nội dung và không có bằng chứng khen/chê hoặc dấu hiệu phàn nàn rõ; chưa đủ để kết luận cảm xúc."
+  },
+  "reported_reply_sources": [
+    "shop bảo",
+    "shop nói"
+  ],
+  "reported_followup_complaint_patterns": [
+    "^(?:và\\s+)?(?:lỗi|vấn\\s+đề|việc|trường\\s+hợp|yêu\\s+cầu)\\s+(?:này|đó)\\s+(?:thì\\s+)?(?:shop|người\\s+bán|bên\\s+bán)\\s+không\\s+(?:giải\\s+quyết|xử\\s+lý|hỗ\\s+trợ)"
+  ]
 }

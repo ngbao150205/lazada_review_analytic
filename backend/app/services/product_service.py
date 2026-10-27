@@ -13,11 +13,13 @@ from database.models import (
 
 from app.services.crawler_client import crawl_product
 from app.services.ai_client import predict_sentiment, UnanalyzableReview
-from app.services.issue_service import save_issue_analysis
-from app.services.risk_service import save_risk_detection
+from app.services.issue_service import ISSUE_RULES, save_issue_analysis
+from app.services.risk_service import save_risk_detection, serialize_risk, RISK_RULE_VERSION
 from app.services.category_service import detect_product_category
 from app.services.review_identity import fingerprint, is_fallback, ReviewIdentityConflict
 from app.services.rating_summary import summarize_ratings
+from app.services.product_url import normalize_product_url
+from app.services.insight_service import build_product_insights, collection_context, public_insights
 
 
 # ============================================================
@@ -104,6 +106,10 @@ def create_product(
     Tạo Product mới.
     """
 
+    if platform == PLATFORM:
+        url_product_id, url = normalize_product_url(url)
+        if url_product_id != str(product_id):
+            raise ValueError("Mã sản phẩm trong URL không khớp dữ liệu thu thập.")
     product = Product(
         owner_id=owner_id,
         platform_product_id=str(product_id),
@@ -141,6 +147,10 @@ def update_product(
     sau mỗi lần crawl.
     """
 
+    if product.platform == PLATFORM:
+        url_product_id, url = normalize_product_url(url)
+        if url_product_id != str(product.platform_product_id):
+            raise ValueError("Mã sản phẩm trong URL không khớp dữ liệu thu thập.")
     product.url = url
 
     if product_name:
@@ -294,6 +304,7 @@ def create_review_analysis(
         confidence=confidence,
         model_version=final_result.get("model_name") or MODEL_VERSION,
         analysis_method=method,
+        decision_details=final_result,
     )
 
     db.add(analysis)
@@ -380,6 +391,7 @@ def analyze_new_review(
         content=review.content,
         sentiment=sentiment,
         category=category,
+        rating=review.rating,
     )
 
     # ========================================================
@@ -486,7 +498,8 @@ def complete_existing_review_analysis(
 
     issue_results = []
 
-    if not review.issue_analysis:
+    issue_assessment = review.issue_assessment or {}
+    if not review.issue_analysis or issue_assessment.get("rule_version") != ISSUE_RULES["rule_version"]:
 
         issue_results = save_issue_analysis(
             db=db,
@@ -494,6 +507,7 @@ def complete_existing_review_analysis(
             content=review.content,
             sentiment=sentiment,
             category=category,
+            rating=review.rating,
         )
 
     # ========================================================
@@ -502,7 +516,7 @@ def complete_existing_review_analysis(
 
     risk_result = review.risk_detection
 
-    if not risk_result:
+    if not risk_result or risk_result.rule_version != RISK_RULE_VERSION:
 
         risk_result = save_risk_detection(
             db=db,
@@ -609,12 +623,8 @@ def build_product_analysis(
         # RISK
         # ====================================================
 
-        if review.risk_detection:
-
-            risk = review.risk_detection
-
-            if risk.risk_flag:
-                risk_counter[risk.risk_level or "UNKNOWN"] += 1
+        if serialize_risk(review.risk_detection, review.content)["risk_flag"]:
+            risk_counter["FLAGGED"] += 1
 
     # ========================================================
     # SENTIMENT COUNTS
@@ -692,8 +702,9 @@ def build_product_analysis(
         "negative_rate": negative_rate,
         "neutral_rate": neutral_rate,
         "issue_summary": dict(issue_counter),
-        "risk_summary": dict(risk_counter),
+        "risk_summary": {"FLAGGED": risk_counter["FLAGGED"]},
         "rating_summary": summarize_ratings(reviews),
+        "insights": build_product_insights(reviews, category=product.category, context=product.collection_context),
     }
 
 
@@ -753,6 +764,7 @@ def save_analysis_history(
         ),
         rating_summary=json.dumps(analysis_result["rating_summary"], ensure_ascii=False)
         if analysis_result.get("rating_summary") is not None else None,
+        insights=analysis_result.get("insights"),
         analyzed_at=datetime.utcnow(),
     )
 
@@ -771,10 +783,12 @@ def analyze_product(
     url: str,
     owner_id: int | None = None,
 ):
-    return analyze_collected_reviews(db, url, crawl_product(url), owner_id=owner_id)
+    _, crawl_url = normalize_product_url(url, keep_sku=True)
+    return analyze_collected_reviews(db, crawl_url, crawl_product(crawl_url), owner_id=owner_id, category_url=url)
 
 
-def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, commit=True, owner_id=None, allow_file_import=False):
+def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, commit=True, owner_id=None,
+                              allow_file_import=False, category_url: str | None = None):
     """Analyze a collected batch using shared sentiment, issue and risk rules.
 
     URL crawling and authenticated imports share identity matching and one
@@ -823,7 +837,8 @@ def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, comm
 
         category = detect_product_category(
             product_name=product_name or (product.name if product else None),
-            product_url=url,
+            product_url=category_url or url,
+            existing_category=product.category if product else None,
         )
 
         if not category:
@@ -1032,6 +1047,8 @@ def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, comm
         # 7. BUILD PRODUCT ANALYSIS
         # ====================================================
 
+        product.collection_context = collection_context(product.collection_context, crawl_result)
+
         analysis = build_product_analysis(
             db=db,
             product=product,
@@ -1103,15 +1120,7 @@ def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, comm
             # RISK RESPONSE
             # =================================================
 
-            risk_response = None
-
-            if risk:
-
-                risk_response = {
-                    "risk_flag": risk.risk_flag,
-                    "risk_level": risk.risk_level,
-                    "risk_keyword": risk.risk_keyword,
-                }
+            risk_response = serialize_risk(risk, review.content)
 
             # =================================================
             # REVIEW RESPONSE
@@ -1150,6 +1159,10 @@ def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, comm
             "collection_provider": crawl_result.get("collection_provider", "crawler"),
             "browser_error": crawl_result.get("browser_error"),
             "crawl_error": crawl_result.get("crawl_error"),
+            "crawl_error_code": crawl_result.get("crawl_error_code"),
+            "curl_error_code": crawl_result.get("curl_error_code"),
+            "upstream_status": crawl_result.get("upstream_status"),
+            "request_attempts": crawl_result.get("request_attempts"),
             "total_reviews_available": crawl_result.get("total_reviews_available"),
             "pages_attempted": crawl_result.get("pages_attempted"),
             "pages_fetched": crawl_result.get("pages_fetched"),
@@ -1180,7 +1193,7 @@ def analyze_collected_reviews(db: Session, url: str, crawl_result: dict, *, comm
             ),
             "unanalyzable_reviews": len(unanalyzable_review_ids),
             "unanalyzable_review_ids": unanalyzable_review_ids,
-            "analysis": analysis,
+            "analysis": {**analysis, "insights": public_insights(analysis.get("insights"))},
             "analysis_history_id": history.id,
             "reviews": response_reviews,
         }

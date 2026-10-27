@@ -7,6 +7,7 @@ from database.init_db import init_db
 from app.api.products import router as product_router
 from app.api.collections import router as collection_router
 from app.api.auth import router as auth_router
+from app.api.comparisons import router as comparison_router
 from app.security.auth import allowed_origins
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,6 +56,7 @@ app.include_router(
 )
 app.include_router(collection_router)
 app.include_router(auth_router)
+app.include_router(comparison_router)
 
 
 

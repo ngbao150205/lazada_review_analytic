@@ -1,5 +1,7 @@
 from typing import Optional
 from sqlalchemy.orm import Session
+from app.services.issue_service import serialize_issue
+from app.services.risk_service import serialize_risk
 
 from database.models import (
     Product,
@@ -126,7 +128,9 @@ def get_product_reviews(
                     review.analysis.model_version,
 
                 "method":
-                    review.analysis.analysis_method
+                    review.analysis.analysis_method,
+
+                "decision_details": review.analysis.decision_details,
 
             }
 
@@ -140,38 +144,14 @@ def get_product_reviews(
 
         for issue in review.issue_analysis:
 
-            issues.append({
-
-                "issue_type":
-                    issue.issue_type,
-
-                "matched_keyword":
-                    issue.matched_keyword
-
-            })
+            issues.append(serialize_issue(issue))
 
 
         # ----------------------------------------------------
         # RISK
         # ----------------------------------------------------
 
-        risk_data = None
-
-
-        if review.risk_detection:
-
-            risk_data = {
-
-                "risk_flag":
-                    review.risk_detection.risk_flag,
-
-                "risk_level":
-                    review.risk_detection.risk_level,
-
-                "risk_keyword":
-                    review.risk_detection.risk_keyword
-
-            }
+        risk_data = serialize_risk(review.risk_detection, review.content)
 
 
         # ----------------------------------------------------
@@ -200,6 +180,8 @@ def get_product_reviews(
 
             "issues":
                 issues,
+
+            "issue_assessment": review.issue_assessment,
 
             "risk":
                 risk_data
