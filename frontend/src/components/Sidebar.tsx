@@ -1,101 +1,42 @@
-import {
-  History,
-  Home,
-  PlayCircle,
-} from "lucide-react";
+import { History, Home, PlayCircle } from "lucide-react";
+import { matchPath, NavLink, useLocation } from "react-router-dom";
+import "./Sidebar.css";
 
-import {
-  NavLink,
-} from "react-router-dom";
+const items = [
+  { to: "/", label: "Trang chủ", icon: Home, end: true },
+  { to: "/analyze", label: "Bắt đầu phân tích", icon: PlayCircle, end: false },
+  { to: "/history", label: "Lịch sử phân tích", icon: History, end: false },
+];
 
 function Sidebar() {
-  const navItemClass = ({
-    isActive,
-  }: {
-    isActive: boolean;
-  }) => {
-    return `
-      flex
-      items-center
-      gap-3
-      rounded-xl
-      px-4
-      py-3
-      text-sm
-      font-medium
-      transition
-      ${
-        isActive
-          ? "bg-blue-600 text-white"
-          : "text-slate-300 hover:bg-slate-800 hover:text-white"
-      }
-    `;
-  };
+  const { pathname } = useLocation();
+  // Derive selection from the URL so clicks and Back/Forward stay in sync.
+  const activeIndex = items.findIndex(({ to, end }) => matchPath({ path: to, end }, pathname));
 
   return (
-    <aside
-      className="
-        fixed
-        bottom-0
-        left-0
-        top-0
-        z-40
-        hidden lg:flex
-        w-72
-        flex-col
-        overflow-hidden
-        bg-slate-950
-        px-5
-        py-6
-        text-white
-      "
-    >
-      <div className="mb-10 shrink-0">
-        <h1 className="text-2xl font-bold">
-          Sentiment AI
-        </h1>
-
-        <p className="mt-1 text-sm text-slate-400">
-          Customer Feedback Analytics
-        </p>
-      </div>
-
-      <nav className="shrink-0 space-y-2">
-        <NavLink
-          to="/"
-          end
-          className={navItemClass}
-        >
-          <Home className="h-5 w-5" />
-          Trang chủ
-        </NavLink>
-
-        <NavLink
-          to="/analyze"
-          className={navItemClass}
-        >
-          <PlayCircle className="h-5 w-5" />
-          Bắt đầu phân tích
-        </NavLink>
-
-        <NavLink
-          to="/history"
-          className={navItemClass}
-        >
-          <History className="h-5 w-5" />
-          Lịch sử phân tích
-        </NavLink>
+    <aside aria-label="Sentiment AI" className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
+      <nav aria-label="Điều hướng chính" className="glass-sidebar">
+        <span
+          aria-hidden="true"
+          className="glass-sidebar__selection"
+          style={{
+            transform: `translateY(${Math.max(0, activeIndex) * 52}px)`,
+            opacity: activeIndex < 0 ? 0 : 1,
+          }}
+        />
+        {items.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            aria-label={label}
+            className={({ isActive }) => `glass-sidebar__link${isActive ? " glass-sidebar__link--active" : ""}`}
+          >
+            <Icon aria-hidden="true" size={21} strokeWidth={1.5} />
+            <span aria-hidden="true" className="glass-sidebar__tooltip">{label}</span>
+          </NavLink>
+        ))}
       </nav>
-
-      <div className="mt-auto shrink-0 rounded-2xl bg-slate-900 p-4">
-        <p className="text-xs font-semibold text-slate-300">
-          Hệ thống phân tích AI
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          Phân tích sentiment, nguyên nhân tiêu cực và cảnh báo rủi ro từ review sản phẩm.
-        </p>
-      </div>
     </aside>
   );
 }

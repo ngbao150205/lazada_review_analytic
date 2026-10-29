@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.dashboard-shell {
+  --page-gutter: 24px;
+  --sidebar-space: 0px;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-shell { --sidebar-space: 80px; }
+}
+
+@media (max-width: 400px) {
+  .dashboard-shell { --page-gutter: 20px; }
+}

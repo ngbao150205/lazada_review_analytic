@@ -26,7 +26,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <Home />
       </DashboardLayout>
     ),
@@ -35,7 +35,7 @@ const router = createBrowserRouter([
   {
     path: "/analyze",
     element: (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <Analyze />
       </DashboardLayout>
     ),
@@ -44,7 +44,7 @@ const router = createBrowserRouter([
   {
     path: "/history",
     element: (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <History />
       </DashboardLayout>
     ),

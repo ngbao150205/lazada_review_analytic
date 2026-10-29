@@ -2,18 +2,14 @@ import { API_BASE_URL, apiFetch } from "../services/http";
 import { useEffect, useMemo, useState } from "react";
 import type { ProductIssue } from "../services/api";
 import IssueEvidenceDetails from "../components/IssueEvidenceDetails";
+import { ProductPageState, ProductPagination, ProductRating, ProductSentiment } from "../components/ProductPageUI";
 
 import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
 
-import {
-  AlertTriangle,
-  Loader2,
-  MessageSquareText,
-  Search,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 
 
@@ -125,26 +121,6 @@ function formatDate(value?: string | null): string {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function getSentimentBadgeClass(sentiment?: string): string {
-  if (sentiment === "Positive") {
-    return "bg-green-100 text-green-700";
-  }
-
-  if (sentiment === "Negative") {
-    return "bg-red-100 text-red-700";
-  }
-
-  return "bg-slate-100 text-slate-700";
-}
-
-function getStars(rating?: number | null): string {
-  if (!rating) {
-    return "Chưa có rating";
-  }
-
-  return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
 }
 
 function getReviewDisplayId(review: ReviewItem): string | number {
@@ -283,29 +259,6 @@ function Issues() {
     return Object.values(issueSummary).reduce((sum, count) => sum + count, 0);
   }, [issueSummary]);
 
-  const sentimentSummary = useMemo(() => {
-    const summary: Record<SentimentFilter, number> = {
-      ALL: flattenedIssues.length,
-      Positive: 0,
-      Neutral: 0,
-      Negative: 0,
-    };
-
-    for (const item of flattenedIssues) {
-      const sentiment = item.review.sentiment?.sentiment;
-
-      if (
-        sentiment === "Positive" ||
-        sentiment === "Neutral" ||
-        sentiment === "Negative"
-      ) {
-        summary[sentiment] += 1;
-      }
-    }
-
-    return summary;
-  }, [flattenedIssues]);
-
   const filteredIssues = useMemo(() => {
     const query = searchText.trim().toLowerCase();
 
@@ -335,277 +288,39 @@ function Issues() {
     });
   }, [flattenedIssues, selectedIssueType, selectedSentiment, searchText]);
 
-  if (loading) {
-    return (
-      <div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 text-slate-600">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <div>
-              <p className="font-medium">
-                Đang tải dữ liệu nguyên nhân tiêu cực...
-              </p>
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [productId, selectedIssueType, selectedSentiment, searchText]);
+  const pages = Math.max(1, Math.ceil(filteredIssues.length / 10));
+  const safePage = Math.min(page, pages);
+  const visibleIssues = filteredIssues.slice((safePage - 1) * 10, safePage * 10);
 
-              {loadingProgress && (
-                <p className="mt-1 text-sm text-slate-500">
-                  {loadingProgress}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <ProductPageState title="Đang tải các phản ánh…" loading><p>{loadingProgress}</p></ProductPageState>;
+  if (error) return <ProductPageState title="Chưa thể tải dữ liệu" error><p>{error}</p></ProductPageState>;
 
-  if (error) {
-    return (
-      <div>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-          <div className="flex items-center gap-2 font-semibold">
-            <AlertTriangle className="h-5 w-5" />
-            Không thể tải dữ liệu
-          </div>
-
-          <p className="mt-2 text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <p className="text-sm font-semibold text-blue-600">
-          Product ID: {productId}
-        </p>
-
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">
-          Nguyên nhân tiêu cực
-        </h1>
-
-        <p className="mt-2 max-w-5xl text-slate-500">
-          Trang này thống kê các vấn đề cụ thể được phát hiện từ review.
-          Có thể lọc theo nhóm vấn đề, cảm xúc dự đoán và nội dung review.
-        </p>
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Tổng review đã tải</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">
-            {reviews.length}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Review có vấn đề được phát hiện</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">
-            {reviewsWithIssues.length}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">Nhóm vấn đề</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">
-            {issueTypes.length}
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">
-          Các vấn đề thường gặp
-        </h2>
-
-        {issueTypes.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500">
-            Chưa phát hiện vấn đề cụ thể nào.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {issueTypes.map(({ issueType, count }) => {
-              const percentage =
-                totalIssues > 0 ? Math.round((count / totalIssues) * 100) : 0;
-
-              return (
-                <button
-                  type="button"
-                  key={issueType}
-                  onClick={() => setSelectedIssueType(issueType)}
-                  className={`w-full rounded-xl border p-4 text-left transition ${
-                    selectedIssueType === issueType
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-100 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        {getIssueLabel(issueType)}
-                      </p>
-                      <p className="text-xs text-slate-500">{issueType}</p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-slate-900">
-                        {count}
-                      </p>
-                      <p className="text-xs text-slate-500">{percentage}%</p>
-                    </div>
-                  </div>
-
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div
-                      className="h-2 rounded-full bg-blue-500"
-                      style={{
-                        width: `${percentage}%`,
-                      }}
-                    />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              Review có vấn đề
-            </h2>
-            <p className="text-sm text-slate-500">
-              Danh sách review sau khi áp dụng bộ lọc hiện tại.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 md:flex-row">
-            <select
-              value={selectedIssueType}
-              onChange={(event) => setSelectedIssueType(event.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-blue-500"
-            >
-              <option value="ALL">Tất cả vấn đề</option>
-
-              {issueTypes.map(({ issueType }) => (
-                <option key={issueType} value={issueType}>
-                  {getIssueLabel(issueType)}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedSentiment}
-              onChange={(event) =>
-                setSelectedSentiment(event.target.value as SentimentFilter)
-              }
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-blue-500"
-            >
-              <option value="ALL">
-                Tất cả cảm xúc ({sentimentSummary.ALL})
-              </option>
-              <option value="Positive">
-                Positive ({sentimentSummary.Positive})
-              </option>
-              <option value="Neutral">
-                Neutral ({sentimentSummary.Neutral})
-              </option>
-              <option value="Negative">
-                Negative ({sentimentSummary.Negative})
-              </option>
-            </select>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-
-              <input
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Tìm review, keyword, mã review..."
-                className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-4 text-sm outline-none focus:border-blue-500 md:w-72"
-              />
-            </div>
-          </div>
-        </div>
-
-        {filteredIssues.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 p-10 text-center">
-            <MessageSquareText className="mx-auto mb-3 h-8 w-8 text-slate-400" />
-
-            <p className="font-medium text-slate-700">
-              Không có review phù hợp.
-            </p>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Thử đổi bộ lọc vấn đề, cảm xúc hoặc từ khóa tìm kiếm.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredIssues.map(({ review, issue }, index) => {
-              const sentiment = review.sentiment?.sentiment;
-
-              return (
-                <div
-                  key={`${review.id}-${issue.issue_type}-${issue.matched_keyword}-${index}`}
-                  className="rounded-xl border border-slate-100 bg-slate-50 p-5"
-                >
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {getIssueLabel(issue.issue_type)}
-                    </span>
-
-                    <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-                      {issue.matched_keyword ? `Keyword: ${issue.matched_keyword}` : "Chưa xác định nhóm cụ thể"}
-                    </span>
-
-                    {sentiment && (
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${getSentimentBadgeClass(
-                          sentiment
-                        )}`}
-                      >
-                        {sentiment}
-                      </span>
-                    )}
-
-                    {review.rating !== null && review.rating !== undefined && (
-                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700">
-                        {getStars(review.rating)} {review.rating}/5
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="mb-3 whitespace-pre-line leading-relaxed text-slate-800">
-                    {review.content || "Không có nội dung review."}
-                  </p>
-
-                  <IssueEvidenceDetails evidence={issue.evidence} label={getIssueLabel(issue.issue_type)} />
-
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                    <span>Review ID: {getReviewDisplayId(review)}</span>
-
-                    <span>Ngày: {formatDate(review.review_date)}</span>
-
-                    {review.risk?.risk_flag === true && (
-                      <span>
-                        Cảnh báo rủi ro
-                        {review.risk.risk_keyword
-                          ? ` · ${review.risk.risk_keyword}`
-                          : ""}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="product-page product-issues-grid">
+    <aside className="product-panel" aria-labelledby="issues-groups-title"><h2 id="issues-groups-title" className="product-panel__title">Các vấn đề thường gặp</h2>
+      <div className="product-issue-groups"><button type="button" className="product-issue-group" aria-pressed={selectedIssueType === "ALL"} onClick={() => setSelectedIssueType("ALL")}><span>Tất cả vấn đề<strong>{totalIssues.toLocaleString("vi-VN")}</strong></span></button>{issueTypes.map(({ issueType, count }) => {
+        const percentage = totalIssues ? Math.round(count / totalIssues * 100) : 0;
+        return <button key={issueType} type="button" className="product-issue-group" aria-pressed={selectedIssueType === issueType} onClick={() => setSelectedIssueType(issueType)}><span><span>{getIssueLabel(issueType)}</span><strong>{count.toLocaleString("vi-VN")}</strong></span><small>{percentage}% phản ánh được phân nhóm</small><span aria-hidden="true" className="product-issue-group__track"><span style={{ width: `${percentage}%` }} /></span></button>;
+      })}</div>{issueTypes.length === 0 && <p className="product-panel__description">Chưa phát hiện vấn đề cụ thể.</p>}
+    </aside>
+    <section className="product-issues-results" aria-label="Danh sách phản ánh theo vấn đề">
+      <div className="product-panel"><div className="product-toolbar"><h2 className="product-panel__title">Bộ lọc phản ánh</h2><div className="product-toolbar__filters">
+        <div className="product-field"><label htmlFor="issues-type">Nhóm vấn đề</label><select id="issues-type" value={selectedIssueType} onChange={event => setSelectedIssueType(event.target.value)} className="product-select"><option value="ALL">Tất cả vấn đề</option>{issueTypes.map(({ issueType }) => <option key={issueType} value={issueType}>{getIssueLabel(issueType)}</option>)}</select></div>
+        <div className="product-field"><label htmlFor="issues-sentiment">Cảm xúc</label><select id="issues-sentiment" value={selectedSentiment} onChange={event => setSelectedSentiment(event.target.value as SentimentFilter)} className="product-select"><option value="ALL">Tất cả cảm xúc</option><option value="Positive">Positive</option><option value="Neutral">Neutral</option><option value="Negative">Negative</option></select></div>
+        <div className="product-field"><label htmlFor="issues-search">Tìm phản ánh</label><div className="product-search"><Search aria-hidden="true" size={16} strokeWidth={1.5} /><input id="issues-search" value={searchText} onChange={event => setSearchText(event.target.value)} placeholder="Nội dung, từ khóa hoặc mã đánh giá…" className="product-input" /></div></div>
+      </div></div></div>
+      <p className="product-muted" role="status">{filteredIssues.length.toLocaleString("vi-VN")} phản ánh phù hợp · Trang {safePage} / {pages}</p>
+      {visibleIssues.length === 0 ? <ProductPageState title="Không có phản ánh phù hợp"><p>Thử thay đổi nhóm vấn đề, cảm xúc hoặc từ khóa tìm kiếm.</p><button type="button" onClick={() => { setSelectedIssueType("ALL"); setSelectedSentiment("ALL"); setSearchText(""); }} className="product-button product-button--outline">Đặt lại bộ lọc</button></ProductPageState>
+        : <div className="product-review-list">{visibleIssues.map(({ review, issue }, index) => <article key={`${review.id}-${issue.issue_type}-${issue.matched_keyword}-${index}`} className="product-review">
+          <div className="product-review__header"><div><h3>Đánh giá #{getReviewDisplayId(review)}</h3><p className="product-review__date">{formatDate(review.review_date)}</p></div><ProductRating rating={review.rating} /></div>
+          <div className="product-review__tags"><span className="product-badge">{getIssueLabel(issue.issue_type)}</span>{issue.matched_keyword && <span className="product-badge">Từ khóa: {issue.matched_keyword}</span>}<ProductSentiment sentiment={review.sentiment?.sentiment} />{review.risk?.risk_flag && <span className="product-badge product-badge--risk">Cảnh báo rủi ro{review.risk.risk_keyword && ` · ${review.risk.risk_keyword}`}</span>}</div>
+          <p className="product-review__content">{review.content || "Không có nội dung đánh giá."}</p>
+          <IssueEvidenceDetails evidence={issue.evidence} label={getIssueLabel(issue.issue_type)} />
+        </article>)}</div>}
+      <ProductPagination page={safePage} totalPages={pages} onChange={setPage} label="Phân trang phản ánh" />
+    </section>
+  </div>;
 }
 
 export default Issues;

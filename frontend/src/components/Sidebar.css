@@ -1,0 +1,92 @@
+.glass-sidebar {
+  position: relative;
+  display: flex;
+  width: 56px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  background: linear-gradient(155deg, rgb(255 255 255 / 9%), transparent 55%), rgb(20 23 29 / 82%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow:
+    0 12px 32px rgb(15 23 42 / 20%),
+    0 3px 8px rgb(15 23 42 / 12%),
+    inset 0 1px 1px rgb(255 255 255 / 18%),
+    inset 0 -1px 3px rgb(0 0 0 / 40%);
+}
+
+.glass-sidebar__selection {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%), 0 0 12px rgb(255 255 255 / 12%);
+  pointer-events: none;
+  transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
+}
+
+.glass-sidebar__link {
+  position: relative;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: rgb(255 255 255 / 62%);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.glass-sidebar__link:not(.glass-sidebar__link--active):hover {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.glass-sidebar__link--active {
+  color: #191c23;
+}
+
+.glass-sidebar__link:focus-visible {
+  outline: 2px solid #a5c9ff;
+  outline-offset: 3px;
+}
+
+.glass-sidebar__tooltip {
+  position: absolute;
+  left: calc(100% + 20px);
+  padding: 8px 12px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 12px;
+  background: rgb(20 23 29 / 94%);
+  box-shadow: 0 4px 16px rgb(15 23 42 / 14%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.glass-sidebar__link:hover .glass-sidebar__tooltip,
+.glass-sidebar__link:focus-visible .glass-sidebar__tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-sidebar__selection,
+  .glass-sidebar__link,
+  .glass-sidebar__tooltip {
+    transition: none;
+  }
+}

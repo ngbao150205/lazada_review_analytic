@@ -1,0 +1,21 @@
+.product-workspace { min-width: 0; padding-top: 16px; }
+.product-workspace__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-bottom: 20px; }
+.product-workspace__breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: #64666a; font-size: 11px; }
+.product-workspace__breadcrumb a, .product-workspace__new { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; }
+.product-workspace__breadcrumb a:hover { color: #202329; text-decoration: underline; text-underline-offset: 4px; }
+.product-workspace__new { padding: 10px 18px; border: 1px solid #dededb; border-radius: 999px; background: #fff; color: #202329; font-size: 11px; }
+.product-workspace__new:hover { border-color: #77797e; }
+.product-workspace__tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #dededb; }
+.product-workspace__tab { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 11px 16px; border: 1px solid transparent; border-radius: 999px; color: #64666a; font-size: 12px; font-weight: 500; transition: background-color 180ms ease, color 180ms ease; }
+.product-workspace__tab:hover:not(.product-workspace__tab--active) { background: #e8e8e5; color: #202329; }
+.product-workspace__tab--active { background: #202329; color: #fff; }
+.product-workspace__bar a:focus-visible, .product-workspace__tab:focus-visible { outline: 2px solid #202329; outline-offset: 4px; }
+.product-workspace svg { flex-shrink: 0; }
+.product-workspace__empty { padding: 32px; border: 1px solid #dededb; border-radius: 20px; background: #fff; }
+.product-workspace__empty a { display: inline-block; margin-top: 16px; text-decoration: underline; }
+@media (max-width: 639px) {
+  .product-workspace { padding-top: 4px; }
+  .product-workspace__tabs { margin-bottom: 24px; padding-bottom: 20px; }
+  .product-workspace__tab { gap: 6px; padding: 10px 12px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .product-workspace__tab { transition: none; } }

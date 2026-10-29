@@ -1,433 +1,210 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowRight, ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, History as HistoryIcon, Loader2, Search, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { getProductHistory, getProductHistories, type ProductHistoryItem, type AnalysisHistoryItem } from "../services/api";
+import "./History.css";
 
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  History as HistoryIcon,
-  LayoutDashboard,
-  Loader2,
-  Search,
-} from "lucide-react";
+const PRODUCTS_PER_PAGE = 6;
+const RUNS_PER_PAGE = 5;
 
-import {
-  Link,
-} from "react-router-dom";
+function HistoryPagination({ page, total, pageSize, label, onChange }: {
+  page: number; total: number; pageSize: number; label: string; onChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pages = [...new Set([1, page - 1, page, page + 1, totalPages])]
+    .filter(value => value >= 1 && value <= totalPages).sort((left, right) => left - right);
+  if (total <= pageSize) return null;
 
-import {
-  getProductHistory,
-  getProductHistories,
-  type ProductHistoryItem,
-  type AnalysisHistoryItem,
-} from "../services/api";
+  return <nav className="history-pagination" aria-label={label}>
+    <p>Trang {formatNumber(page)} / {formatNumber(totalPages)}</p>
+    <div className="history-pagination__buttons">
+      <button type="button" disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Trang trước"><ChevronLeft aria-hidden="true" size={17} strokeWidth={1.5} /></button>
+      {pages.map((value, index) => <span key={value} className="history-pagination__item">
+        {index > 0 && value - pages[index - 1] > 1 && <span className="history-pagination__gap" aria-hidden="true">…</span>}
+        <button type="button" aria-label={`Trang ${value}`} aria-current={value === page ? "page" : undefined} onClick={() => { if (value !== page) onChange(value); }}>{formatNumber(value)}</button>
+      </span>)}
+      <button type="button" disabled={page >= totalPages} onClick={() => onChange(page + 1)} aria-label="Trang sau"><ChevronRight aria-hidden="true" size={17} strokeWidth={1.5} /></button>
+    </div>
+  </nav>;
+}
 
 function formatDate(value?: string | null): string {
-  if (!value) {
-    return "Không rõ ngày";
-  }
-
+  if (!value) return "Chưa có thông tin";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+    hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric",
   });
 }
 
-function formatNumber(value?: number): string {
-  return new Intl.NumberFormat("vi-VN").format(value || 0);
+function formatNumber(value = 0): string {
+  return value.toLocaleString("vi-VN");
 }
 
-function History() {
+export default function History() {
   const [products, setProducts] = useState<ProductHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [searchText, setSearchText] = useState("");
-
+  const [productPage, setProductPage] = useState(1);
+  const [runPages, setRunPages] = useState<Record<number, number>>({});
+  const searchInput = useRef<HTMLInputElement>(null);
+  const library = useRef<HTMLElement>(null);
   const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
   const [productHistoriesMap, setProductHistoriesMap] = useState<Record<number, AnalysisHistoryItem[]>>({});
   const [loadingHistoriesMap, setLoadingHistoriesMap] = useState<Record<number, boolean>>({});
+  const [historiesErrors, setHistoriesErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
+    let ignore = false;
     async function fetchHistory() {
       setLoading(true);
       setError("");
-
       try {
         const response = await getProductHistory();
-        setProducts(response.products || []);
+        if (!ignore) setProducts(response.products || []);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Không thể tải lịch sử phân tích.");
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : "Không thể tải lịch sử phân tích.");
+          setProducts([]);
         }
-
-        setProducts([]);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
+    void fetchHistory();
+    return () => { ignore = true; };
+  }, [retry]);
 
-    fetchHistory();
-  }, []);
+  async function loadRuns(productId: number) {
+    if (loadingHistoriesMap[productId] || productHistoriesMap[productId]) return;
+    setLoadingHistoriesMap(previous => ({ ...previous, [productId]: true }));
+    setHistoriesErrors(previous => ({ ...previous, [productId]: "" }));
+    try {
+      const data = await getProductHistories(productId);
+      setProductHistoriesMap(previous => ({ ...previous, [productId]: data.histories || [] }));
+    } catch (err) {
+      setHistoriesErrors(previous => ({ ...previous, [productId]: err instanceof Error ? err.message : "Không tải được các lần phân tích. Vui lòng thử lại." }));
+    } finally {
+      setLoadingHistoriesMap(previous => ({ ...previous, [productId]: false }));
+    }
+  }
 
-  async function toggleSelectRuns(productId: number) {
+  function toggleSelectRuns(productId: number) {
     if (expandedProductId === productId) {
       setExpandedProductId(null);
-      return;
-    }
-
-    setExpandedProductId(productId);
-
-    if (!productHistoriesMap[productId]) {
-      setLoadingHistoriesMap((prev) => ({ ...prev, [productId]: true }));
-      try {
-        const data = await getProductHistories(productId);
-        setProductHistoriesMap((prev) => ({
-          ...prev,
-          [productId]: data.histories || [],
-        }));
-      } catch (err) {
-        console.error(`Lỗi tải lịch sử phân tích cho sản phẩm ${productId}:`, err);
-        setProductHistoriesMap((prev) => ({
-          ...prev,
-          [productId]: [],
-        }));
-      } finally {
-        setLoadingHistoriesMap((prev) => ({ ...prev, [productId]: false }));
-      }
+    } else {
+      setExpandedProductId(productId);
+      void loadRuns(productId);
     }
   }
 
   const filteredProducts = useMemo(() => {
     const query = searchText.trim().toLowerCase();
-
-    if (!query) {
-      return products;
-    }
-
-    return products.filter((product) => {
-      return (
-        product.name.toLowerCase().includes(query) ||
-        product.url.toLowerCase().includes(query) ||
-        product.platform_product_id.toLowerCase().includes(query) ||
-        String(product.id).includes(query) ||
-        (product.category || "").toLowerCase().includes(query) ||
-        (product.category_label || "").toLowerCase().includes(query)
-      );
-    });
+    if (!query) return products;
+    return products.filter(product => [product.name, product.url, product.platform_product_id, String(product.id), product.category, product.category_label]
+      .some(value => value?.toLowerCase().includes(query)));
   }, [products, searchText]);
+  const page = Math.min(productPage, Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)));
+  const productOffset = (page - 1) * PRODUCTS_PER_PAGE;
+  const pageProducts = filteredProducts.slice(productOffset, productOffset + PRODUCTS_PER_PAGE);
 
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
-        <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-
-          <div>
-            <p className="font-semibold">
-              Đang tải lịch sử phân tích...
-            </p>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Hệ thống đang lấy danh sách sản phẩm từ database.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+  function changeSearch(value: string) {
+    setSearchText(value);
+    setProductPage(1);
+    setExpandedProductId(null);
   }
 
-  if (error) {
-    return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-        <p className="font-semibold">
-          Không thể tải lịch sử phân tích
-        </p>
+  function changeProductPage(next: number) {
+    setProductPage(next);
+    setExpandedProductId(null);
+    library.current?.focus({ preventScroll: true });
+    library.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }
 
-        <p className="mt-2 text-sm">
-          {error}
-        </p>
-      </div>
-    );
+  function clearSearch() {
+    changeSearch("");
+    searchInput.current?.focus();
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-slate-900">
-          Lịch sử phân tích
-        </h1>
-
-        <p className="mt-2 text-slate-500">
-          Chọn sản phẩm và chọn lần phân tích tương ứng để mở Dashboard kết quả.
-        </p>
+    <div className="history-page">
+      <header className="history-heading">
+        <div>
+          <h1>Lịch sử phân tích.</h1>
+        </div>
       </header>
 
-      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-slate-700">
-              Tổng sản phẩm đã phân tích
-            </p>
-
-            <p className="mt-1 text-2xl font-bold text-slate-900">
-              {products.length}
-            </p>
-          </div>
-
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-
-            <input
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Tìm theo tên, URL, product ID, category..."
-              className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
+      <section ref={library} tabIndex={-1} className="history-library" aria-labelledby="history-library-title">
+        <div className="history-toolbar">
+          <div className="history-search">
+            <label htmlFor="history-search" className="sr-only">Tìm theo tên, URL, mã sản phẩm hoặc ngành hàng</label>
+            <Search aria-hidden="true" size={18} strokeWidth={1.5} />
+            <input ref={searchInput} id="history-search" type="text" value={searchText} disabled={loading || !!error} onChange={event => changeSearch(event.target.value)} placeholder="Tên, URL, mã hoặc ngành hàng…" autoComplete="off" />
+            {searchText && <button type="button" onClick={clearSearch} aria-label="Xóa từ khóa tìm kiếm"><X aria-hidden="true" size={16} strokeWidth={1.5} /></button>}
           </div>
         </div>
+
+        {loading ? <div role="status" className="history-state"><span aria-hidden="true" className="history-state__icon"><Loader2 size={24} strokeWidth={1.5} className="history-spinner" /></span><h3>Đang tải lịch sử phân tích…</h3><p>Các sản phẩm và kết quả đã lưu sẽ xuất hiện tại đây.</p></div>
+          : error ? <div role="alert" className="history-state history-state--error"><h3>Chưa thể tải lịch sử</h3><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)} className="history-button history-button--dark">Thử lại <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></button></div>
+          : products.length === 0 ? <div className="history-state"><span aria-hidden="true" className="history-state__icon"><HistoryIcon size={26} strokeWidth={1.5} /></span><p className="history-eyebrow">Khởi đầu từ một sản phẩm</p><h3>Góc nhìn đầu tiên đang chờ bạn.</h3><p>Phân tích một sản phẩm bằng URL hoặc file đánh giá. Kết quả được lưu tại đây để bạn có thể xem lại bất cứ lúc nào.</p><Link to="/analyze" className="history-button history-button--dark">Bắt đầu phân tích <ArrowUpRight aria-hidden="true" size={17} strokeWidth={1.5} /></Link></div>
+          : <>
+            <p role="status" className="history-result-count">{filteredProducts.length > 0 ? `Hiển thị ${formatNumber(productOffset + 1)}–${formatNumber(productOffset + pageProducts.length)} / ${formatNumber(filteredProducts.length)} sản phẩm` : "Không có sản phẩm phù hợp"}{searchText.trim() && ` · Tổng ${formatNumber(products.length)} sản phẩm đã lưu`}</p>
+            {filteredProducts.length === 0 ? <div className="history-state"><span aria-hidden="true" className="history-state__icon"><Search size={24} strokeWidth={1.5} /></span><h3>Chưa tìm thấy sản phẩm phù hợp.</h3><p>Thử một tên sản phẩm, mã, URL hoặc ngành hàng khác.</p><button type="button" onClick={clearSearch} className="history-button history-button--outline">Xóa tìm kiếm</button></div>
+              : <div className="history-product-list">{pageProducts.map(product => {
+                const isExpanded = expandedProductId === product.id;
+                const histories = productHistoriesMap[product.id] || [];
+                const isLoadingHistories = loadingHistoriesMap[product.id];
+                const runsError = historiesErrors[product.id];
+                const runPage = Math.min(runPages[product.id] || 1, Math.max(1, Math.ceil(histories.length / RUNS_PER_PAGE)));
+                const runOffset = (runPage - 1) * RUNS_PER_PAGE;
+                const pageRuns = histories.slice(runOffset, runOffset + RUNS_PER_PAGE);
+                return (
+                  <article key={product.id} className={`history-product${isExpanded ? " history-product--expanded" : ""}`} aria-labelledby={`history-product-${product.id}`}>
+                    <div className="history-product__header">
+                      <div className="history-product__info">
+                        <div className="history-product__tags"><span className="history-product__id">#{product.id}</span><span>{product.platform === "import" ? "Tải từ file" : product.platform}</span>{(product.category_label || product.category) && <span>{product.category_label || product.category}</span>}</div>
+                        <h3 id={`history-product-${product.id}`} title={product.name}><Link to={`/products/${product.id}/dashboard`}>{product.name}</Link></h3>
+                        <p className="history-product__source">{product.url || "Dữ liệu đánh giá tải từ file"}</p>
+                      </div>
+                      <div className="history-product__actions">
+                        <Link to={`/products/${product.id}/dashboard`} className="history-button history-button--dark" aria-label={`Mở dashboard: ${product.name}`}>Mở dashboard <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link>
+                        <button type="button" onClick={() => toggleSelectRuns(product.id)} aria-expanded={isExpanded} aria-controls={`history-runs-${product.id}`} aria-label={`${isExpanded ? "Đóng" : "Chọn"} lần phân tích: ${product.name}`} className="history-button history-button--outline">Các lần phân tích <ChevronDown aria-hidden="true" size={16} strokeWidth={1.5} className={isExpanded ? "history-chevron history-chevron--expanded" : "history-chevron"} /></button>
+                      </div>
+                    </div>
+                    <dl className="history-product__meta">
+                      <div><dt>Đánh giá đã lưu</dt><dd>{formatNumber(product.total_reviews)}</dd></div>
+                      <div><dt>Ngày tạo</dt><dd>{formatDate(product.created_at)}</dd></div>
+                      {product.last_crawled_at && <div><dt>Thu thập gần nhất</dt><dd>{formatDate(product.last_crawled_at)}</dd></div>}
+                      {product.platform !== "import" && product.platform_product_id && <div><dt>Mã trên nền tảng</dt><dd>{product.platform_product_id}</dd></div>}
+                    </dl>
+
+                    <div id={`history-runs-${product.id}`} hidden={!isExpanded} className="history-runs">
+                      {isExpanded && <>
+                        <div className="history-runs__heading"><h4>Các lần phân tích</h4>{!isLoadingHistories && !runsError && <span>{formatNumber(histories.length)} lần được ghi nhận</span>}</div>
+                        {isLoadingHistories ? <p role="status" className="history-runs__loading"><Loader2 aria-hidden="true" size={17} strokeWidth={1.5} className="history-spinner" />Đang tải các lần phân tích…</p>
+                          : runsError ? <div role="alert" className="history-runs__notice"><strong>Chưa thể tải các lần phân tích.</strong><p>{runsError}</p><button type="button" onClick={() => void loadRuns(product.id)} className="history-text-link">Thử lại <ArrowRight aria-hidden="true" size={16} strokeWidth={1.5} /></button></div>
+                          : histories.length === 0 ? <div className="history-runs__notice"><strong>Chưa có lần phân tích riêng để mở lại.</strong><p>Bạn vẫn có thể xem dashboard hiện tại của sản phẩm.</p><Link to={`/products/${product.id}/dashboard`} className="history-text-link">Mở dashboard hiện tại <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.5} /></Link></div>
+                          : <><ol className="history-run-list">{pageRuns.map((run, index) => <li key={run.id}>
+                            <Link to={`/products/${product.id}/dashboard?historyId=${run.id}`} className="history-run history-run--link" aria-label={`Mở dashboard lần ${histories.length - runOffset - index} của ${product.name}, ${formatDate(run.analyzed_at)}`}>
+                            <div className="history-run__top"><div className="history-run__identity"><strong>Lần #{histories.length - runOffset - index}</strong>{runOffset + index === 0 && <span className="history-run__latest">Mới nhất</span>}<span>{formatDate(run.analyzed_at)}</span></div><span className="history-text-link">Mở dashboard <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.5} /></span></div>
+                            <dl className="history-run__stats"><div><dt>Đã phân tích</dt><dd>{formatNumber(run.analyzed_reviews ?? run.total_reviews)}<span> đánh giá</span></dd></div>{([
+                              { label: "Positive", rate: run.positive_rate, count: run.positive_count, tone: "dark" },
+                              { label: "Neutral", rate: run.neutral_rate, count: run.neutral_count, tone: "medium" },
+                              { label: "Negative", rate: run.negative_rate, count: run.negative_count, tone: "light" },
+                            ]).map(item => <div key={item.label}><dt><span aria-hidden="true" className={`history-sentiment-dot history-sentiment-dot--${item.tone}`} />{item.label}</dt><dd>{item.rate.toLocaleString("vi-VN")}%<span> · {formatNumber(item.count)} đánh giá</span></dd></div>)}</dl>
+                            </Link>
+                          </li>)}</ol><HistoryPagination page={runPage} total={histories.length} pageSize={RUNS_PER_PAGE} label={`Phân trang các lần phân tích: ${product.name}`} onChange={next => setRunPages(previous => ({ ...previous, [product.id]: next }))} /></>}
+                      </>}
+                    </div>
+                  </article>
+                );
+              })}</div>}
+            <HistoryPagination page={page} total={filteredProducts.length} pageSize={PRODUCTS_PER_PAGE} label="Phân trang sản phẩm" onChange={changeProductPage} />
+          </>}
       </section>
-
-      {products.length === 0 ? (
-        <section className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-sm">
-          <HistoryIcon className="mx-auto mb-4 h-10 w-10 text-slate-400" />
-
-          <h2 className="text-lg font-semibold text-slate-800">
-            Chưa có sản phẩm nào trong lịch sử
-          </h2>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Hãy phân tích một sản phẩm để hệ thống lưu vào database.
-          </p>
-
-          <Link
-            to="/analyze"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Bắt đầu phân tích
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </section>
-      ) : filteredProducts.length === 0 ? (
-        <section className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-800">
-            Không tìm thấy sản phẩm phù hợp
-          </h2>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Thử tìm bằng tên sản phẩm, URL, category hoặc product ID khác.
-          </p>
-        </section>
-      ) : (
-        <section className="space-y-4">
-          {filteredProducts.map((product) => {
-            const isExpanded = expandedProductId === product.id;
-            const histories = productHistoriesMap[product.id] || [];
-            const isLoadingHistories = loadingHistoriesMap[product.id];
-
-            return (
-              <article
-                key={product.id}
-                className={`rounded-2xl border bg-white p-6 shadow-sm transition ${
-                  isExpanded
-                    ? "border-blue-300 ring-2 ring-blue-50"
-                    : "border-slate-100 hover:border-blue-200 hover:shadow-md"
-                }`}
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                        Product ID: {product.id}
-                      </span>
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                        {product.platform === "import" ? "Tải từ file" : product.platform}
-                      </span>
-
-                      {product.category && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                          {product.category_label || product.category}
-                        </span>
-                      )}
-                    </div>
-
-                    <h2 className="mt-3 line-clamp-2 text-xl font-bold text-slate-900">
-                      {product.name}
-                    </h2>
-
-                    <p className="mt-2 break-all text-sm text-slate-500">
-                      {product.url || "Dữ liệu đánh giá tải từ file"}
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                      {product.platform !== "import" && <span className="rounded-full bg-slate-100 px-3 py-1">
-                        Platform ID: {product.platform_product_id}
-                      </span>}
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
-                        Review: {formatNumber(product.total_reviews)}
-                      </span>
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
-                        Ngày tạo: {formatDate(product.created_at)}
-                      </span>
-
-                      {product.last_crawled_at && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1">
-                          Cập nhật gần nhất: {formatDate(product.last_crawled_at)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                    <button
-                      type="button"
-                      onClick={() => toggleSelectRuns(product.id)}
-                      className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
-                        isExpanded
-                          ? "bg-slate-900 text-white hover:bg-slate-800"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
-                      }`}
-                    >
-                      <Clock className="h-4 w-4" />
-                      {isExpanded ? "Đóng lần phân tích" : "Chọn lần phân tích"}
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </button>
-
-                    <Link
-                      to={`/products/${product.id}/reviews`}
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Xem review
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Sub-panel: Danh sách các lần phân tích */}
-                {isExpanded && (
-                  <div className="mt-6 border-t border-slate-100 pt-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                        <HistoryIcon className="h-4 w-4 text-blue-600" />
-                        Danh sách các lần phân tích:
-                      </div>
-
-                      <span className="text-xs text-slate-500">
-                        {isLoadingHistories
-                          ? "Đang tải..."
-                          : `${histories.length} lần phân tích được ghi nhận`}
-                      </span>
-                    </div>
-
-                    {isLoadingHistories ? (
-                      <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-6 text-sm text-slate-500">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                        Đang lấy danh sách các lần phân tích...
-                      </div>
-                    ) : histories.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
-                        <p className="text-sm text-slate-600">
-                          Chưa có lịch sử các snapshot riêng lẻ trong database.
-                        </p>
-                        <Link
-                          to={`/products/${product.id}/dashboard`}
-                          className="mt-3 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                        >
-                          <LayoutDashboard className="h-3.5 w-3.5" />
-                          Mở Dashboard tổng hợp hiện tại
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {histories.map((run, index) => {
-                          const runNumber = histories.length - index;
-                          const isLatest = index === 0;
-
-                          return (
-                            <div
-                              key={run.id}
-                              className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-300 hover:bg-blue-50/40 md:flex-row md:items-center md:justify-between"
-                            >
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-bold text-slate-900 text-sm">
-                                    Lần #{runNumber}
-                                  </span>
-
-                                  {isLatest && (
-                                    <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-                                      Mới nhất
-                                    </span>
-                                  )}
-
-                                  <span className="text-xs text-slate-500">
-                                    Thời gian: {formatDate(run.analyzed_at)}
-                                  </span>
-                                </div>
-
-                                <div className="mt-2.5 flex flex-wrap gap-2 text-xs">
-                                  <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-slate-600">
-                                    Đánh giá: <b>{formatNumber(run.analyzed_reviews || run.total_reviews)}</b>
-                                  </span>
-
-                                  <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700">
-                                    Tích cực: <b>{run.positive_rate}%</b> ({run.positive_count})
-                                  </span>
-
-                                  <span className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-rose-700">
-                                    Tiêu cực: <b>{run.negative_rate}%</b> ({run.negative_count})
-                                  </span>
-
-                                  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700">
-                                    Trung tính: <b>{run.neutral_rate}%</b> ({run.neutral_count})
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="shrink-0">
-                                <Link
-                                  to={`/products/${product.id}/dashboard?historyId=${run.id}`}
-                                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 md:w-auto"
-                                >
-                                  <LayoutDashboard className="h-3.5 w-3.5" />
-                                  Xem Dashboard lần này
-                                  <ArrowRight className="h-3.5 w-3.5" />
-                                </Link>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </article>
-            );
-          })}
-        </section>
-      )}
+      <footer className="history-footnote"><span aria-hidden="true" /><p>Mở dashboard để xem kết quả mới nhất. Chọn một lần phân tích để đi thẳng đến dashboard của lần đã lưu.</p></footer>
     </div>
   );
 }
-
-export default History;

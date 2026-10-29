@@ -6,7 +6,7 @@ export default function IssueEvidenceDetails({ evidence, label }: { evidence?: I
     const key = `${match.original_start}:${match.original_end}`;
     clauses.set(key, [...(clauses.get(key) || []), match]);
   }
-  return <details className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+  return <details className="product-evidence">
     <summary className="cursor-pointer font-medium text-slate-800">Bằng chứng: {label}</summary>
     {!evidence ? <p className="mt-2 text-slate-500">Kết quả cũ chưa lưu bằng chứng chi tiết. Dùng “Phân tích AI lại” trên Dashboard để cập nhật.</p> : <div className="mt-3 space-y-3">
       <p>Ngành hàng đã dùng: <strong>{evidence.category_label || evidence.category}</strong></p>
